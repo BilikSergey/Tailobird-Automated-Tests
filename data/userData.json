@@ -1,0 +1,17 @@
+{
+  "existingUser": {
+    "email": "test-serhii@yopmail.com",
+    "password": "g8VXfc9j7MUMhDv",
+    "organization": "Luxe Quality"
+  },
+  "date": {
+    "startDate": "2025-10-31",
+    "endDate": "2025-12-31"
+  },
+  "dateHumanReadableFormat": {
+    "duration": "Oct 31, 2025 -> Dec 31, 2025"
+  },
+  "projectName": {
+    "project1": "testingProject1"
+  }
+}

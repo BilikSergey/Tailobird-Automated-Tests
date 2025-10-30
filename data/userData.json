@@ -4,6 +4,10 @@
     "password": "g8VXfc9j7MUMhDv",
     "organization": "Luxe Quality"
   },
+  "vendorUser": {
+    "email": "serhii-test-vendor@yopmail.com",
+    "password": "pSFqnXSPV879zdx"
+  },
   "date": {
     "startDate": "2025-10-31",
     "endDate": "2025-12-31"

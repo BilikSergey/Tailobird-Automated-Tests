@@ -2,6 +2,7 @@ import { expect, Locator, Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import properties from "../data/properties.json";
 import userData from "../data/userData.json";
+import { formatNumberWithComma } from "../utils/formatters";
 export class MainPage {
   page: Page;
   buttonSideBarProjects: Locator;
@@ -75,6 +76,22 @@ export class MainPage {
 
   //Verify if edition is applied
   cellEditedBidAmount: Locator;
+  cellEditedAppliedBidAmount: (label: string) => Locator;
+
+  //Verify Level Bid
+  buttonBidLevelling: Locator;
+  columnHeadersOfBidLevelling: (label: string) => Locator;
+  columnFooterOfBidLevelling: Locator;
+
+  //Award
+  buttonAward: Locator;
+  buttonConfirmAwarding: Locator;
+  cellStatusAwarded: Locator;
+
+  //Finalize
+  buttonContract: Locator;
+  clickableButtonAddContract: Locator;
+  cellsScope: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -111,7 +128,9 @@ export class MainPage {
     );
 
     //Verify created project
-    this.projectOverviewForm = this.page.locator("div.mantine-Paper-root");
+    this.projectOverviewForm = this.page.locator(
+      '//div/descendant::p[contains(text(), "Project Overview")]'
+    );
     this.createdProjectName = (label: string) =>
       this.page.locator('p[data-size="md"]', { hasText: label });
     this.createdProjectDateDuration = (label: string) =>
@@ -152,7 +171,9 @@ export class MainPage {
     this.cellEndDate = this.page
       .locator('[role="gridcell"][col-id="end_date"]')
       .last();
-    this.buttonViewDetails = this.page.locator('button[title="View Details"]').last();
+    this.buttonViewDetails = this.page
+      .locator('button[title="View Details"]')
+      .last();
 
     //Verify created job
     this.inputCreatedJobName = this.page.locator(
@@ -244,6 +265,63 @@ export class MainPage {
     this.cellEditedBidAmount = this.page.locator(
       '[role="gridcell"][col-id="bid_cost"]'
     );
+    this.cellEditedAppliedBidAmount = (label: string) =>
+      this.page.locator(
+        `//p[contains(text(), "${label}")]/ancestor::div[@role="row"]/div[@col-id="status" and @role="gridcell"]/descendant::p[contains (text(), "Accepted")]`
+      );
+
+    //Verify Level Bid
+    this.buttonBidLevelling = this.page
+      .locator(
+        '//p[contains(text(), "Bid Book")]/ancestor::div[contains(@class, "mantine-Card-root")]//button[@class]'
+      )
+      .nth(6);
+    this.columnHeadersOfBidLevelling = (label: string) =>
+      this.page.locator(
+        `(//p[contains (text(), "${label}")]/ancestor::div[@role="row"])[2]/descendant::div[@role="columnheader"]`
+      );
+    this.columnFooterOfBidLevelling = this.page.locator(
+      `(//span[contains(text(), "Total")]/ancestor::div[@role="row"])/descendant::div[@role="gridcell"]`
+    );
+
+    //Award
+    this.buttonAward = this.page.locator(
+      '//div[contains (text(), "Award Bid")]/ancestor::button'
+    );
+    this.buttonConfirmAwarding = this.page.locator(
+      '//h2[contains(text(), "Award Bid | ")]/ancestor::section[@role="dialog"]//button/descendant::span[contains(text(), "Award")]'
+    );
+    this.cellStatusAwarded = this.page.locator(
+      '//div[@role="gridcell" and @col-id="status"]/descendant::p[contains(text(), "Awarded")]'
+    );
+
+    //Finalize
+    this.buttonContract = this.page.locator(
+      '//span[contains(text(), "Contracts")]/ancestor::button'
+    );
+    this.clickableButtonAddContract = this.page.getByRole("menuitem", {
+      name: "Add Contract",
+    });
+    this.cellsScope = this.page.locator(
+      '//span[contains(text(), "Finalize Contract")]/ancestor::div[contains(@class, "mantine-Stack-root")]//div[@col-id="scope" and @role="gridcell"]'
+    );
+  }
+
+  async finalize() {
+    await this.buttonContract.click();
+    await this.hoveringButtonAddJob.hover();
+    await this.clickableButtonAddContract.click();
+    await expect(this.cellsScope).toHaveCount(3, { timeout: 5000 });
+  }
+
+  async award() {
+    await this.vendorMenuAction.nth(0).click();
+    await this.buttonAward.click();
+    await this.buttonConfirmAwarding.click();
+  }
+
+  async clickButtonLevellingBid() {
+    await this.buttonBidLevelling.click();
   }
 
   async editOnBehalfOfVendor(
@@ -256,9 +334,19 @@ export class MainPage {
     await this.buttonEditOnBehalfOfVendor.click();
     await this.cellTotalCost(bid1Name).dblclick();
     await this.inputTotalCost.fill(totalCostString1);
+    await this.inputTotalCost.press("Enter");
+    await expect(this.cellTotalCost(bid1Name)).toHaveText(
+      "$" + formatNumberWithComma(totalCostString1),
+      { timeout: 5000 }
+    );
 
     await this.cellTotalCost(bid2Name).dblclick();
     await this.inputTotalCost.fill(totalCostString2);
+    await this.inputTotalCost.press("Enter");
+    await expect(this.cellTotalCost(bid2Name)).toHaveText(
+      "$" + formatNumberWithComma(totalCostString2),
+      { timeout: 5000 }
+    );
 
     await this.crossButton.click();
   }
@@ -287,13 +375,13 @@ export class MainPage {
     await this.hoveringButtonAddBid.hover();
     await this.clickableButtonAddBid.click();
     await this.cellScope.first().dblclick();
-    await this.inputScope.fill(bid1Name);
+    await this.inputScope.fill(bid2Name);
     await this.inputScope.press("Enter");
 
     await this.hoveringButtonAddBid.hover();
     await this.clickableButtonAddBid.click();
     await this.cellScope.nth(2).dblclick();
-    await this.inputScope.fill(bid2Name);
+    await this.inputScope.fill(bid1Name);
     await this.inputScope.press("Enter");
   }
 

@@ -26,10 +26,10 @@ export class LoginUser {
     await this.page.goto(links.login.stagingURL);
   }
 
-  async login() {
-    await this.inputEmail.fill(userData.existingUser.email);
+  async login(email: string, password: string) {
+    await this.inputEmail.fill(email);
     await this.buttonSubmit.click();
-    await this.inputPassword.fill(userData.existingUser.password);
+    await this.inputPassword.fill(password);
     await this.buttonLogin.click();
   }
 }

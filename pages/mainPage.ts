@@ -70,6 +70,7 @@ export class MainPage {
   //Edit on Behalf of Vendor
   vendorMenuAction: Locator;
   buttonEditOnBehalfOfVendor: Locator;
+  entireEditSection: Locator;
   cellTotalCost: (label: string) => Locator;
   inputTotalCost: Locator;
   crossButton: Locator;
@@ -89,9 +90,21 @@ export class MainPage {
   cellStatusAwarded: Locator;
 
   //Finalize
+  buttonHideOverview: Locator;
   buttonContract: Locator;
   clickableButtonAddContract: Locator;
   cellsScope: Locator;
+  cellFilledScope: (label: string) => Locator;
+  cellTotalCostFinalizeSection: Locator;
+  buttonFinalizeContract: Locator;
+  buttonDialogFinalizeContract: Locator;
+
+  //Bulk Update Status
+  checkBox: Locator;
+  buttonBulkUpdateStatus: Locator;
+  optionInProgress: Locator;
+  buttonUpdateStatus: Locator;
+  cellStatus: (label: string) => Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -159,7 +172,9 @@ export class MainPage {
     this.cellJobType = this.page
       .locator('div[col-id="job_type"]:has-text("Unit Interior")')
       .last();
-    this.capexOptionJobType = this.page.locator('p:has-text("Capex")');
+    this.capexOptionJobType = this.page.locator(
+      '//p[contains(text(),"Capex")]/ancestor::div[1]'
+    );
     this.cellStartDate = this.page
       .locator('[role="gridcell"][col-id="start_date"]')
       .last();
@@ -201,7 +216,7 @@ export class MainPage {
 
     //Invite Vendors
     this.dropDownInviteVendorsMenu = page.locator(
-      'p:has-text("Invite Vendors")'
+      'p:has-text("Manage Vendors")'
     );
     this.buttonInviteVendors = page.getByRole("button", {
       name: "Invite Vendors To Bid",
@@ -239,10 +254,13 @@ export class MainPage {
 
     //Edit on Behalf of Vendor
     this.vendorMenuAction = this.page.locator(
-      'div[role="gridcell"][col-id="actions"] button[aria-haspopup="menu"]'
+      '//div[@role="gridcell" and @col-id="actions"]/descendant::button[@aria-haspopup="menu"]'
     );
     this.buttonEditOnBehalfOfVendor = this.page.locator(
       'button[role="menuitem"]:has-text("Edit On Behalf of Vendor")'
+    );
+    this.entireEditSection = this.page.locator(
+      '//h2[contains(text(), "Edit Bid On Behalf of Vendor")]/ancestor::section'
     );
     this.cellTotalCost = (label: string) =>
       this.page
@@ -252,7 +270,7 @@ export class MainPage {
         .filter({
           has: this.page.locator(`div[col-id="scope"] >> text="${label}"`),
         })
-        .locator('div[col-id="total_cost"]');
+        .locator('div[col-id="total_price"]');
 
     this.inputTotalCost = this.page.locator(
       'input[data-testid="bird-table-currency-input"]'
@@ -296,6 +314,9 @@ export class MainPage {
     );
 
     //Finalize
+    this.buttonHideOverview = this.page.locator(
+      '//span[contains(text(), "Finalize Contract")]/ancestor::div//p[normalize-space(text()) = "Overview"]'
+    );
     this.buttonContract = this.page.locator(
       '//span[contains(text(), "Contracts")]/ancestor::button'
     );
@@ -305,18 +326,73 @@ export class MainPage {
     this.cellsScope = this.page.locator(
       '//span[contains(text(), "Finalize Contract")]/ancestor::div[contains(@class, "mantine-Stack-root")]//div[@col-id="scope" and @role="gridcell"]'
     );
+    this.cellFilledScope = (label: string) =>
+      this.page.locator(
+        `//p[contains(text(), "${label}")]/ancestor::div[@role="gridcell" and @col-id="scope"]`
+      );
+    this.cellTotalCostFinalizeSection = this.page.locator(
+      '//div[@col-id="total_cost" and @role="gridcell"]'
+    );
+    this.buttonFinalizeContract = this.page.locator(
+      '//span[contains(text(), "Finalize Contract")]/ancestor::button'
+    );
+    this.buttonDialogFinalizeContract = this.page.locator(
+      '//h2[contains(text(), "Finalize Contract")]/ancestor::section[@role="dialog"]//span[contains(text(), "Finalize Contract")]/ancestor::button'
+    );
+
+    //Bulk Update Status
+    this.checkBox = this.page.locator(
+      '//div[@data-ref="eCheckbox" and @role="presentation"]'
+    );
+    this.buttonBulkUpdateStatus = this.page.locator(
+      '//span[contains(text(), "Bulk Update Status")]/ancestor::button'
+    );
+    this.optionInProgress = this.page.locator(
+      '//div[contains(text(), "In Progress")]/ancestor::button'
+    );
+    this.buttonUpdateStatus = this.page.locator(
+      '//h2[contains(text(), "Update Contract Status")]/ancestor::section[@role="dialog"]//span[contains(text(), "Update Status")]/ancestor::button'
+    );
+    this.cellStatus = (label: string) =>
+      this.page.locator(
+        `//p[contains(text(), "${label}")]/ancestor::div[@role="row"]//div[@role="gridcell" and @col-id="status"]`
+      );
   }
 
-  async finalize() {
+  async bulkUpdateStatus() {
+    await this.checkBox.nth(2).click({ force: true });
+    await this.buttonBulkUpdateStatus.click();
+    await this.optionInProgress.click();
+    await this.buttonUpdateStatus.click();
+  }
+
+  async finalize(bid3Name: string, totalCostString3: string) {
     await this.buttonContract.click();
+    await this.buttonHideOverview.click();
     await this.hoveringButtonAddJob.hover();
     await this.clickableButtonAddContract.click();
     await expect(this.cellsScope).toHaveCount(3, { timeout: 5000 });
+    await this.cellsScope.nth(2).scrollIntoViewIfNeeded();
+    await this.cellsScope.nth(2).dblclick();
+    await this.inputScope.fill(bid3Name);
+    await this.inputScope.press("Enter");
+    await this.cellFilledScope(bid3Name).waitFor({ state: "visible" });
+    await this.cellTotalCostFinalizeSection.nth(2).scrollIntoViewIfNeeded();
+    await this.cellTotalCostFinalizeSection.nth(2).dblclick();
+    await this.inputTotalCost.fill(totalCostString3);
+    await this.inputTotalCost.press("Enter");
+    await expect(this.cellTotalCostFinalizeSection.nth(2)).toHaveText(
+      "$" + formatNumberWithComma(totalCostString3)
+    );
+    await this.buttonFinalizeContract.click();
+    await this.buttonDialogFinalizeContract.click();
   }
 
   async award() {
     await this.vendorMenuAction.nth(0).click();
-    await this.buttonAward.click();
+    await this.buttonAward.waitFor({ state: "visible" });
+    await expect(this.buttonAward).toBeEnabled({ timeout: 5000 });
+    await this.buttonAward.click({ force: true });
     await this.buttonConfirmAwarding.click();
   }
 
@@ -332,6 +408,7 @@ export class MainPage {
   ) {
     await this.vendorMenuAction.nth(1).click();
     await this.buttonEditOnBehalfOfVendor.click();
+    await expect(this.entireEditSection).toBeVisible();
     await this.cellTotalCost(bid1Name).dblclick();
     await this.inputTotalCost.fill(totalCostString1);
     await this.inputTotalCost.press("Enter");
@@ -362,8 +439,6 @@ export class MainPage {
     await this.notificationInvitedNewVendor.waitFor({ state: "visible" });
 
     await this.buttonInviteVendors.click();
-    // await this.checkBoxVendor.scrollIntoViewIfNeeded();
-    // await this.checkBoxVendor.check();
     await this.searchInput.fill("Luxe Quality");
     await this.checkBoxVendor.check();
     await this.buttonInviteSelectedVendor.click();
@@ -391,10 +466,10 @@ export class MainPage {
     await this.clickableButtonAddJob.click();
     await this.cellTitleJob.dblclick();
     await this.inputTitleJob.fill(jobTitle);
-    await this.cellJobType.dblclick();
-    await this.capexOptionJobType.click();
-    await this.page.waitForTimeout(2000);
-    await this.buttonViewDetails.click();
+    await this.cellJobType.dblclick({ force: true });
+    await expect(this.capexOptionJobType).toBeVisible({ timeout: 2000 });
+    await this.capexOptionJobType.click({ force: true });
+    await this.buttonViewDetails.click({ force: true });
     await this.inputCreatedJobName.waitFor({ state: "visible" });
   }
 

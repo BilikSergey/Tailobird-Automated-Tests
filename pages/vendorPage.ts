@@ -11,6 +11,9 @@ export class VendorPage {
   inputTotalCostCell: Locator;
   buttonSubmitBid: Locator;
 
+  //Verify if Contract is Awarded on Vednor's Side
+  formContractAwarded: Locator;
+
   constructor(page: Page) {
     this.page = page;
     this.buttonSideBarBidContracts = this.page.locator(
@@ -27,13 +30,18 @@ export class VendorPage {
     );
     this.cellTotalCost = (label: string) =>
       this.page.locator(
-        `//p[contains(text(), "${label}")]/ancestor::div[@role="row"]//div[@role="gridcell" and @col-id="total_cost"]`
+        `//p[contains(text(), "${label}")]/ancestor::div[@role="row"]//div[@role="gridcell" and @col-id="total_price"]`
       );
     this.inputTotalCostCell = this.page.locator(
       '//input[@data-testid="bird-table-currency-input"]'
     );
     this.buttonSubmitBid = this.page.locator(
       '//button/descendant::span[contains(text(), "Submit Bid")]'
+    );
+
+    //Verify if Contract is Awarded on Vednor's Side
+    this.formContractAwarded = this.page.locator(
+      '//span[contains(text(), "Contract Already Awarded")]/ancestor::div[@role="alert"]'
     );
   }
 

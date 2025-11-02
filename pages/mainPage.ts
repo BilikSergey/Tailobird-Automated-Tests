@@ -360,7 +360,7 @@ export class MainPage {
   }
 
   async bulkUpdateStatus() {
-    await this.checkBox.nth(2).click({ force: true });
+    await this.checkBox.nth(2).click();
     await this.buttonBulkUpdateStatus.click();
     await this.optionInProgress.click();
     await this.buttonUpdateStatus.click();
@@ -389,10 +389,10 @@ export class MainPage {
   }
 
   async award() {
+    await this.vendorMenuAction.nth(0).scrollIntoViewIfNeeded();
+    await this.vendorMenuAction.nth(0).hover();
     await this.vendorMenuAction.nth(0).click();
-    await this.buttonAward.waitFor({ state: "visible" });
-    await expect(this.buttonAward).toBeEnabled({ timeout: 5000 });
-    await this.buttonAward.click({ force: true });
+    await this.buttonAward.click();
     await this.buttonConfirmAwarding.click();
   }
 
@@ -466,10 +466,11 @@ export class MainPage {
     await this.clickableButtonAddJob.click();
     await this.cellTitleJob.dblclick();
     await this.inputTitleJob.fill(jobTitle);
-    await this.cellJobType.dblclick({ force: true });
-    await expect(this.capexOptionJobType).toBeVisible({ timeout: 2000 });
-    await this.capexOptionJobType.click({ force: true });
-    await this.buttonViewDetails.click({ force: true });
+    await this.cellJobType.scrollIntoViewIfNeeded();
+    await this.cellJobType.hover();
+    await this.cellJobType.dblclick();
+    await this.capexOptionJobType.click();
+    await this.buttonViewDetails.click();
     await this.inputCreatedJobName.waitFor({ state: "visible" });
   }
 

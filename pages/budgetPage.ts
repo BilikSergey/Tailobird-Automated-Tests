@@ -1,0 +1,156 @@
+import { expect, Locator, Page } from "@playwright/test";
+import userData from "../data/userData.json";
+import properties from "../data/properties.json";
+import links from "../data/links.json";
+import { formatNumberWithComma } from "../utils/formatters";
+
+export class BudgetPage {
+  page: Page;
+  buttonBudgetAtSidebar: Locator;
+  hoveringButtonAddBudget: Locator;
+  clickableButtonAddBudget: Locator;
+  cellsCategory: Locator;
+  inputCategory: Locator;
+  categoryOption: (label: string) => Locator;
+  cellRevisedBudget: Locator;
+  inputRevisedBudget: Locator;
+  cellOriginalBudget: Locator;
+  deleteBudgetButton: Locator;
+  buttonConfirmDelete: Locator;
+
+  //Allocation
+  buttonAllocation: Locator;
+  rowWithProjectName: (label: string) => Locator;
+  cellJobCategory: (label: string) => Locator;
+  inputJobCategory: Locator;
+  buttonJobCategory: (label: string) => Locator;
+  cellJobRevisedBudget: (label: string) => Locator;
+  inputJobRevisedBudget: Locator;
+
+  //Allocation verification
+  finalBudget: (label: string) => Locator;
+  usedFinalBudget: (label: string) => Locator;
+  remainingFinalBudget: (label: string) => Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.buttonBudgetAtSidebar = this.page.locator(
+      '//span[contains(text(), "Budget")]/ancestor::a[@class]'
+    );
+    this.hoveringButtonAddBudget = this.page.locator(
+      '//button[@data-testid="bt-add-row-menu"]'
+    );
+    this.clickableButtonAddBudget = this.page.getByRole("menuitem", {
+      name: "Add Budget",
+    });
+    this.cellsCategory = this.page.locator(
+      '//div[@role="gridcell" and @col-id="category_id"]'
+    );
+    this.inputCategory = this.page.locator(
+      '//input[@data-testid="bird-table-select-search"]'
+    );
+    this.categoryOption = (label: string) =>
+      this.page.locator(
+        `//div[@data-testid="bird-table-select-dropdown"]/descendant::p[contains(text(), "${label}")]`
+      );
+    this.cellRevisedBudget = this.page.locator(
+      '//div[@role="gridcell" and @col-id="revised_budget"]'
+    );
+    this.inputRevisedBudget = this.page.locator(
+      '//input[@data-testid="bird-table-currency-input"]'
+    );
+    this.cellOriginalBudget = this.page.locator(
+      '//div[@col-id="original_budget" and @role="gridcell"]'
+    );
+    this.deleteBudgetButton = this.page.locator(
+      '//div[@role="gridcell" and @col-id="actions"]/descendant::button'
+    );
+    this.buttonConfirmDelete = this.page.locator(
+      '//p[contains(text(),"Delete Row")]/ancestor::div/descendant::span[contains(text(), "Delete")]/ancestor::button'
+    );
+
+    //Allocation
+    this.buttonAllocation = this.page.locator(
+      '//span[contains(text(), "Allocation")]/ancestor::button'
+    );
+    this.rowWithProjectName = (label: string) =>
+      this.page.locator(
+        `//span[contains(text(), "${label}")]/ancestor::div[@role="gridcell"]`
+      );
+    this.cellJobCategory = (label: string) =>
+      this.page.locator(
+        `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]/following-sibling::div[1]/descendant::div[@role="gridcell" and @col-id="category"]`
+      );
+    this.inputJobCategory = this.page.locator(
+      '//input[@placeholder="Search options..."]'
+    );
+    this.buttonJobCategory = (label: string) =>
+      this.page.locator(`//div[contains(text(), "${label}")]/ancestor::button`);
+    this.cellJobRevisedBudget = (label: string) =>
+      this.page.locator(
+        `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]/following-sibling::div[1]/descendant::div[@role="gridcell" and @col-id="revisedBudget"]`
+      );
+    this.inputJobRevisedBudget = this.page.locator(
+      '//div[@role="presentation"]/descendant::input[@aria-label="Input Editor"]'
+    );
+
+    //Allocation verification
+    this.finalBudget = (label: string) =>
+      this.page.locator(
+        `(//p[contains(text(),"${label}")]/parent::div/parent::div)/descendant::p[contains(text(),"Budget")]/following-sibling::p`
+      );
+    this.usedFinalBudget = (label: string) =>
+      this.page.locator(
+        `(//p[contains(text(),"${label}")]/parent::div/parent::div)/descendant::p[contains(text(),"Used")]/following-sibling::p`
+      );
+    this.remainingFinalBudget = (label: string) =>
+      this.page.locator(
+        `(//p[contains(text(),"${label}")]/parent::div/parent::div)/descendant::p[contains(text(),"Remaining")]/following-sibling::p`
+      );
+  }
+
+  async budget(certainOption: string, originalBudget: string) {
+    await this.buttonBudgetAtSidebar.click();
+    await this.hoveringButtonAddBudget.waitFor({ state: "visible" });
+    const quantityOfRows = await this.cellsCategory.count();
+    await this.hoveringButtonAddBudget.hover();
+    await this.clickableButtonAddBudget.click();
+    await expect(this.cellsCategory).toHaveCount(quantityOfRows + 1);
+    await this.cellsCategory.last().dblclick();
+    await this.inputCategory.fill(certainOption);
+    await this.categoryOption(certainOption).click();
+    await expect(this.cellsCategory).toContainText(certainOption);
+    await this.cellRevisedBudget.last().click();
+    await this.inputRevisedBudget.fill(originalBudget);
+    await this.inputRevisedBudget.press("Enter");
+  }
+
+  async deleteBudget() {
+    await this.buttonBudgetAtSidebar.click();
+    await this.hoveringButtonAddBudget.waitFor({ state: "visible" });
+    const quantityOfRowsBefore = await this.cellsCategory.count();
+    await this.deleteBudgetButton.last().click();
+    await this.buttonConfirmDelete.click();
+    const quantityOfRowsAfter = await this.cellsCategory.count();
+    expect(quantityOfRowsAfter).toBe(quantityOfRowsBefore - 1);
+  }
+
+  async allocation(
+    projectName: string,
+    certainOption: string,
+    totalPrice: string
+  ) {
+    await this.buttonAllocation.click();
+    await this.rowWithProjectName(projectName).scrollIntoViewIfNeeded();
+    await this.cellJobCategory(projectName).click();
+    await this.inputJobCategory.fill(certainOption);
+    await this.buttonJobCategory(certainOption).click();
+    await expect(this.cellJobCategory(projectName)).toHaveText(certainOption);
+    await this.cellJobRevisedBudget(projectName).dblclick();
+    await this.inputJobRevisedBudget.fill(totalPrice);
+    await this.inputJobRevisedBudget.press("Enter");
+    await expect(this.cellJobRevisedBudget(projectName)).toHaveText(
+      "$" + formatNumberWithComma(totalPrice)
+    );
+  }
+}

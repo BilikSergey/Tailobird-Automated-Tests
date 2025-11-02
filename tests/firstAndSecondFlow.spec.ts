@@ -305,6 +305,6 @@ test.describe("Tailobird-Automated-Tests", () => {
     }
 
     //delete option budget
-
+    await budgetPage.deleteBudget();
   });
 });

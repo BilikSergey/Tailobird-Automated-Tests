@@ -6,6 +6,7 @@ import { formatNumberWithComma } from "../utils/formatters";
 
 export class CapExPage {
   page: Page;
+  capExRows: Locator;
   buttonCapExAtSidebar: Locator;
   inputCapExSearch: Locator;
   rowWithProjectName: (label: string) => Locator;
@@ -20,6 +21,7 @@ export class CapExPage {
 
   constructor(page: Page) {
     this.page = page;
+    this.capExRows = this.page.locator('//div[@role="row"]');
     this.buttonCapExAtSidebar = this.page.locator(
       '//span[contains(text(), "CapEx")]/ancestor::a[@class]'
     );
@@ -58,10 +60,18 @@ export class CapExPage {
       );
   }
 
-  async budget(projectName: string) {
+  async capEx(projectName: string) {
     await this.buttonCapExAtSidebar.click();
     await expect(this.inputCapExSearch).toBeVisible();
-    await this.rowWithProjectName(projectName).scrollIntoViewIfNeeded();
+    await this.capExRows.nth(1).click();
+    for (let i = 0; i < 50; i++) {
+      if (await this.rowWithProjectName(projectName).isVisible()) {
+        break;
+      }
+      for (let j = 0; j <= 21; j++) {
+        await this.page.keyboard.press("ArrowDown");
+      }
+    }
     await this.cellJobCategory(projectName).dblclick();
   }
 }

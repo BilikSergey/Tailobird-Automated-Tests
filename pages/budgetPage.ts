@@ -4,6 +4,8 @@ import properties from "../data/properties.json";
 import links from "../data/links.json";
 import { formatNumberWithComma } from "../utils/formatters";
 
+const cellRevisedBudget =
+  '//div[@role="gridcell" and @col-id="revised_budget"]';
 export class BudgetPage {
   page: Page;
   buttonBudgetAtSidebar: Locator;
@@ -12,7 +14,6 @@ export class BudgetPage {
   cellsCategory: Locator;
   inputCategory: Locator;
   categoryOption: (label: string) => Locator;
-  cellRevisedBudget: Locator;
   inputRevisedBudget: Locator;
   cellOriginalBudget: Locator;
   deleteBudgetButton: Locator;
@@ -20,6 +21,9 @@ export class BudgetPage {
 
   //Allocation
   buttonAllocation: Locator;
+  tableContainer: Locator;
+  buttonSyncData: Locator;
+  categoryCells: Locator;
   rowWithProjectName: (label: string) => Locator;
   cellJobCategory: (label: string) => Locator;
   inputJobCategory: Locator;
@@ -53,9 +57,6 @@ export class BudgetPage {
       this.page.locator(
         `//div[@data-testid="bird-table-select-dropdown"]/descendant::p[contains(text(), "${label}")]`
       );
-    this.cellRevisedBudget = this.page.locator(
-      '//div[@role="gridcell" and @col-id="revised_budget"]'
-    );
     this.inputRevisedBudget = this.page.locator(
       '//input[@data-testid="bird-table-currency-input"]'
     );
@@ -72,6 +73,13 @@ export class BudgetPage {
     //Allocation
     this.buttonAllocation = this.page.locator(
       '//span[contains(text(), "Allocation")]/ancestor::button'
+    );
+    this.tableContainer = this.page.locator('//div[@role="treegrid"]');
+    this.buttonSyncData = this.page.locator(
+      '//span[contains(text(),"Sync Data")]/ancestor::button'
+    );
+    this.categoryCells = this.page.locator(
+      '//div[@role="gridcell" and @col-id="category"]'
     );
     this.rowWithProjectName = (label: string) =>
       this.page.locator(
@@ -109,6 +117,10 @@ export class BudgetPage {
       );
   }
 
+  async getCellRevisedBudget() {
+    return this.page.locator(cellRevisedBudget);
+  }
+
   async budget(certainOption: string, originalBudget: string) {
     await this.buttonBudgetAtSidebar.click();
     await this.hoveringButtonAddBudget.waitFor({ state: "visible" });
@@ -119,8 +131,14 @@ export class BudgetPage {
     await this.cellsCategory.last().dblclick();
     await this.inputCategory.fill(certainOption);
     await this.categoryOption(certainOption).click();
-    await expect(this.cellsCategory).toContainText(certainOption);
-    await this.cellRevisedBudget.last().click();
+    await expect(this.cellsCategory.last()).toContainText(certainOption);
+
+    const box = await (await this.getCellRevisedBudget()).last().boundingBox();
+    if (box) {
+      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    }
+    await this.page.waitForTimeout(1000);
+    await (await this.getCellRevisedBudget()).last().dblclick({ trial: false });
     await this.inputRevisedBudget.fill(originalBudget);
     await this.inputRevisedBudget.press("Enter");
   }
@@ -131,6 +149,12 @@ export class BudgetPage {
     const quantityOfRowsBefore = await this.cellsCategory.count();
     await this.deleteBudgetButton.last().click();
     await this.buttonConfirmDelete.click();
+    await expect(
+      this.page.locator('//div[contains(text(), "Row deleted successfully")]')
+    ).toBeVisible();
+    await expect(
+      this.page.locator('//div[contains(text(), "Row deleted successfully")]')
+    ).not.toBeVisible();
     const quantityOfRowsAfter = await this.cellsCategory.count();
     expect(quantityOfRowsAfter).toBe(quantityOfRowsBefore - 1);
   }
@@ -141,7 +165,19 @@ export class BudgetPage {
     totalPrice: string
   ) {
     await this.buttonAllocation.click();
-    await this.rowWithProjectName(projectName).scrollIntoViewIfNeeded();
+    await expect(this.tableContainer).toBeVisible();
+    await this.buttonSyncData.click();
+    await expect(this.tableContainer).not.toBeVisible();
+    await expect(this.tableContainer).toBeVisible();
+    await this.categoryCells.first().click();
+    for (let i = 0; i < 50; i++) {
+      if (await this.rowWithProjectName(projectName).isVisible()) {
+        break;
+      }
+      for (let j = 0; j <= 21; j++) {
+        await this.page.keyboard.press("ArrowDown");
+      }
+    }
     await this.cellJobCategory(projectName).click();
     await this.inputJobCategory.fill(certainOption);
     await this.buttonJobCategory(certainOption).click();

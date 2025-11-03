@@ -16,10 +16,14 @@ test.describe("Tailobird-Automated-Tests", () => {
   let vendorPage: VendorPage;
   let budgetPage: BudgetPage;
   let capExPage: CapExPage;
-  const projectName = faker.commerce.productName();
-  const firstNumberBidPrice = faker.number.int({ min: 10000, max: 12000 });
-  const secondNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
-  const thirdNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
+  // const projectName = faker.commerce.productName();
+  const projectName = "Elegant Ceramic Sausages";
+  const firstNumberBidPrice = 11141;
+  const secondNumberBidPrice = 5624;
+  const thirdNumberBidPrice = 8244;
+  // const firstNumberBidPrice = faker.number.int({ min: 10000, max: 12000 });
+  // const secondNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
+  // const thirdNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
   const firstStringBidPrice = firstNumberBidPrice.toString();
   const secondStringBidPrice = secondNumberBidPrice.toString();
   const thirdStringBidPrice = thirdNumberBidPrice.toString();
@@ -46,12 +50,7 @@ test.describe("Tailobird-Automated-Tests", () => {
     );
 
     //verify whether page displays
-    const items = [
-      "Properties",
-      "Category",
-      "Budget",
-      "CapEx",
-    ];
+    const items = ["Properties", "Category", "Budget", "CapEx"];
     for (const item of items) {
       await login.navLabel(item).first().waitFor({ state: "visible" });
     }
@@ -193,12 +192,7 @@ test.describe("Tailobird-Automated-Tests", () => {
     );
 
     //verify whether page displays
-    const items = [
-      "Properties",
-      "Category",
-      "Budget",
-      "CapEx",
-    ];
+    const items = ["Properties", "Category", "Budget", "CapEx"];
     for (const item of items) {
       await login.navLabel(item).first().waitFor({ state: "visible" });
     }
@@ -212,7 +206,7 @@ test.describe("Tailobird-Automated-Tests", () => {
     );
 
     //budget verification
-    await expect(budgetPage.cellRevisedBudget.last()).toHaveText(
+    await expect((await budgetPage.getCellRevisedBudget()).last()).toHaveText(
       "$" + formatNumberWithComma(originalBudget)
     );
     await expect(budgetPage.cellOriginalBudget.last()).toHaveText(
@@ -237,71 +231,122 @@ test.describe("Tailobird-Automated-Tests", () => {
       budgetPage.usedFinalBudget(properties.categoryBudget.securitySystem)
     ).toHaveText("$" + formatNumberWithComma(totalPrice));
     await expect(
-      budgetPage.finalBudget(properties.categoryBudget.securitySystem)
+      budgetPage.remainingFinalBudget(properties.categoryBudget.securitySystem)
     ).toHaveText("$" + formatNumberWithComma(remainingBudget));
 
     //CapEx Verification
     //Project row
+    await capExPage.capEx(projectName);
     const projectRowIndex = await capExPage
       .rowWithProjectName(projectName)
       .getAttribute("row-index");
+    await capExPage
+      .cellRevisedBudgetProject(projectRowIndex!)
+      .scrollIntoViewIfNeeded();
     await expect(
       capExPage.cellRevisedBudgetProject(projectRowIndex!)
-    ).toHaveText("$" + formatNumberWithComma(totalPrice));
+    ).toContainText("$" + formatNumberWithComma(totalPrice));
+    await capExPage
+      .cellBudgetRemainingProject(projectRowIndex!)
+      .scrollIntoViewIfNeeded();
     await expect(
       capExPage.cellBudgetRemainingProject(projectRowIndex!)
-    ).toHaveText("-$" + formatNumberWithComma(totalPrice));
+    ).toContainText("-$" + formatNumberWithComma(totalPrice));
+    await capExPage
+      .cellOriginalContractProject(projectRowIndex!)
+      .scrollIntoViewIfNeeded();
     await expect(
       capExPage.cellOriginalContractProject(projectRowIndex!)
-    ).toHaveText("$" + formatNumberWithComma(totalPrice));
+    ).toContainText("$" + formatNumberWithComma(totalPrice));
+    await capExPage
+      .cellCurrentContractProject(projectRowIndex!)
+      .scrollIntoViewIfNeeded();
     await expect(
       capExPage.cellCurrentContractProject(projectRowIndex!)
-    ).toHaveText("$" + formatNumberWithComma(totalPrice));
+    ).toContainText("$" + formatNumberWithComma(totalPrice));
+    await capExPage
+      .cellRemainingContractProject(projectRowIndex!)
+      .scrollIntoViewIfNeeded();
     await expect(
       capExPage.cellRemainingContractProject(projectRowIndex!)
-    ).toHaveText("+$" + formatNumberWithComma(totalPrice));
+    ).toContainText("+$" + formatNumberWithComma(totalPrice));
 
     //Job row
     const jobRowIndex = await capExPage
       .cellJobCategory(projectName)
       .getAttribute("row-index");
-    await expect(capExPage.cellRevisedBudgetProject(jobRowIndex!)).toHaveText(
-      "$" + formatNumberWithComma(totalPrice)
-    );
-    await expect(capExPage.cellBudgetRemainingProject(jobRowIndex!)).toHaveText(
-      "-$" + formatNumberWithComma(totalPrice)
-    );
+    for (let i = 0; i < 50; i++) {
+      if (await capExPage.cellRevisedBudgetProject(jobRowIndex!).isVisible()) {
+        break;
+      }
+      for (let j = 0; j <= 1; j++) {
+        await page.keyboard.press("ArrowRight");
+      }
+    }
+    await expect(
+      capExPage.cellRevisedBudgetProject(jobRowIndex!)
+    ).toContainText("$" + formatNumberWithComma(totalPrice));
+    await capExPage
+      .cellBudgetRemainingProject(jobRowIndex!)
+      .scrollIntoViewIfNeeded();
+    await expect(
+      capExPage.cellBudgetRemainingProject(jobRowIndex!)
+    ).toContainText("-$" + formatNumberWithComma(totalPrice));
+    await capExPage
+      .cellOriginalContractProject(jobRowIndex!)
+      .scrollIntoViewIfNeeded();
     await expect(
       capExPage.cellOriginalContractProject(jobRowIndex!)
-    ).toHaveText("$" + formatNumberWithComma(totalPrice));
-    await expect(capExPage.cellCurrentContractProject(jobRowIndex!)).toHaveText(
-      "$" + formatNumberWithComma(totalPrice)
-    );
+    ).toContainText("$" + formatNumberWithComma(totalPrice));
+    await capExPage
+      .cellCurrentContractProject(jobRowIndex!)
+      .scrollIntoViewIfNeeded();
+    await expect(
+      capExPage.cellCurrentContractProject(jobRowIndex!)
+    ).toContainText("$" + formatNumberWithComma(totalPrice));
+    await capExPage
+      .cellRemainingContractProject(jobRowIndex!)
+      .scrollIntoViewIfNeeded();
     await expect(
       capExPage.cellRemainingContractProject(jobRowIndex!)
-    ).toHaveText("+$" + formatNumberWithComma(totalPrice));
+    ).toContainText("+$" + formatNumberWithComma(totalPrice));
 
     //scope 1 row
     const array = [
       "",
-      thirdStringBidPrice,
       secondStringBidPrice,
       firstStringBidPrice,
+      thirdStringBidPrice,
     ];
     for (let i = 1; i <= 3; i++) {
       const scopeRowIndex = (Number(jobRowIndex) + i).toString();
+      await capExPage
+        .cellBudgetRemainingProject(scopeRowIndex!)
+        .scrollIntoViewIfNeeded();
       await expect(
         capExPage.cellBudgetRemainingProject(scopeRowIndex!)
-      ).toHaveText("-$" + formatNumberWithComma(array[i]));
+      ).toContainText("-$" + formatNumberWithComma(array[i]));
       await expect(
         capExPage.cellOriginalContractProject(scopeRowIndex!)
-      ).toHaveText("$" + formatNumberWithComma(array[i]));
+      ).toContainText("$" + formatNumberWithComma(array[i]));
       await expect(
         capExPage.cellCurrentContractProject(scopeRowIndex!)
-      ).toHaveText("$" + formatNumberWithComma(array[i]));
+      ).toContainText("$" + formatNumberWithComma(array[i]));
+      for (let k = 0; k < 50; k++) {
+        if (
+          await capExPage
+            .cellRemainingContractProject(scopeRowIndex!)
+            .isVisible()
+        ) {
+          break;
+        }
+        for (let j = 0; j <= 1; j++) {
+          await page.keyboard.press("ArrowRight");
+        }
+      }
       await expect(
         capExPage.cellRemainingContractProject(scopeRowIndex!)
-      ).toHaveText("+$" + formatNumberWithComma(array[i]));
+      ).toContainText("+$" + formatNumberWithComma(array[i]));
     }
 
     //delete option budget

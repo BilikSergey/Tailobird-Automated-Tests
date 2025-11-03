@@ -1,5 +1,6 @@
 {
   "login": {
-    "stagingURL": "https://stalwart-collection-11-staging.authkit.app/"
+    
+    "stagingURL": "https://beta.tailorbird.com/financials/budget?propertyId=90&tab=jobs"
   }
 }

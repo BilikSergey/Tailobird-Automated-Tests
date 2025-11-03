@@ -21,6 +21,7 @@ export class BudgetPage {
 
   //Allocation
   buttonAllocation: Locator;
+  inputSearchBudgetAllocation: Locator;
   tableContainer: Locator;
   buttonSyncData: Locator;
   categoryCells: Locator;
@@ -74,6 +75,9 @@ export class BudgetPage {
     this.buttonAllocation = this.page.locator(
       '//span[contains(text(), "Allocation")]/ancestor::button'
     );
+    this.inputSearchBudgetAllocation = this.page.locator(
+      '//input[@placeholder="Search budget allocations..."]'
+    );
     this.tableContainer = this.page.locator('//div[@role="treegrid"]');
     this.buttonSyncData = this.page.locator(
       '//span[contains(text(),"Sync Data")]/ancestor::button'
@@ -83,11 +87,11 @@ export class BudgetPage {
     );
     this.rowWithProjectName = (label: string) =>
       this.page.locator(
-        `//span[contains(text(), "${label}")]/ancestor::div[@role="gridcell"]`
+        `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]`
       );
     this.cellJobCategory = (label: string) =>
       this.page.locator(
-        `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]/following-sibling::div[1]/descendant::div[@role="gridcell" and @col-id="category"]`
+        `//div[@row-index="${label}"]/descendant::div[@role="gridcell" and @col-id="category"]`
       );
     this.inputJobCategory = this.page.locator(
       '//input[@placeholder="Search options..."]'
@@ -96,7 +100,7 @@ export class BudgetPage {
       this.page.locator(`//div[contains(text(), "${label}")]/ancestor::button`);
     this.cellJobRevisedBudget = (label: string) =>
       this.page.locator(
-        `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]/following-sibling::div[1]/descendant::div[@role="gridcell" and @col-id="revisedBudget"]`
+        `//div[@row-index="${label}"]/descendant::div[@role="gridcell" and @col-id="revisedBudget"]`
       );
     this.inputJobRevisedBudget = this.page.locator(
       '//div[@role="presentation"]/descendant::input[@aria-label="Input Editor"]'
@@ -143,7 +147,7 @@ export class BudgetPage {
     await this.inputRevisedBudget.press("Enter");
   }
 
-  async deleteBudget() {
+  async deleteBudget(projectName: string) {
     await this.buttonBudgetAtSidebar.click();
     await this.hoveringButtonAddBudget.waitFor({ state: "visible" });
     const quantityOfRowsBefore = await this.cellsCategory.count();
@@ -157,6 +161,28 @@ export class BudgetPage {
     ).not.toBeVisible();
     const quantityOfRowsAfter = await this.cellsCategory.count();
     expect(quantityOfRowsAfter).toBe(quantityOfRowsBefore - 1);
+
+    //delete at allocation
+    await this.buttonAllocation.click();
+    await expect(this.tableContainer).toBeVisible();
+    await this.buttonSyncData.click();
+    await expect(this.tableContainer).not.toBeVisible();
+    await expect(this.tableContainer).toBeVisible();
+    await this.inputSearchBudgetAllocation.fill(projectName);
+    await expect(this.rowWithProjectName(projectName)).toBeVisible();
+    let projectRowIndex = await this.rowWithProjectName(
+      projectName
+    ).getAttribute("row-index");
+    projectRowIndex = (Number(projectRowIndex) + 1).toString();
+    const box = await this.cellJobRevisedBudget(projectRowIndex).first().boundingBox();
+    if (box) {
+      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    }
+    await this.page.waitForTimeout(1000);
+    await this.cellJobRevisedBudget(projectRowIndex).dblclick({ trial: false });
+    await this.inputJobRevisedBudget.fill("0");
+    await this.inputJobRevisedBudget.press("Enter");
+    await expect(this.cellJobRevisedBudget(projectRowIndex!)).toHaveText("$0");
   }
 
   async allocation(
@@ -169,23 +195,27 @@ export class BudgetPage {
     await this.buttonSyncData.click();
     await expect(this.tableContainer).not.toBeVisible();
     await expect(this.tableContainer).toBeVisible();
-    await this.categoryCells.first().click();
-    for (let i = 0; i < 50; i++) {
-      if (await this.rowWithProjectName(projectName).isVisible()) {
-        break;
-      }
-      for (let j = 0; j <= 21; j++) {
-        await this.page.keyboard.press("ArrowDown");
-      }
-    }
-    await this.cellJobCategory(projectName).click();
+    await this.inputSearchBudgetAllocation.fill(projectName);
+    await expect(this.rowWithProjectName(projectName)).toBeVisible();
+    let projectRowIndex = await this.rowWithProjectName(
+      projectName
+    ).getAttribute("row-index");
+    projectRowIndex = (Number(projectRowIndex) + 1).toString();
+    await this.cellJobCategory(projectRowIndex!).first().click();
     await this.inputJobCategory.fill(certainOption);
     await this.buttonJobCategory(certainOption).click();
-    await expect(this.cellJobCategory(projectName)).toHaveText(certainOption);
-    await this.cellJobRevisedBudget(projectName).dblclick();
+    await expect(this.cellJobCategory(projectRowIndex!)).toHaveText(
+      certainOption
+    );
+    const box = await this.cellJobRevisedBudget(projectRowIndex).boundingBox();
+    if (box) {
+      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    }
+    await this.page.waitForTimeout(1000);
+    await this.cellJobRevisedBudget(projectRowIndex).dblclick({ trial: false });
     await this.inputJobRevisedBudget.fill(totalPrice);
     await this.inputJobRevisedBudget.press("Enter");
-    await expect(this.cellJobRevisedBudget(projectName)).toHaveText(
+    await expect(this.cellJobRevisedBudget(projectRowIndex!)).toHaveText(
       "$" + formatNumberWithComma(totalPrice)
     );
   }

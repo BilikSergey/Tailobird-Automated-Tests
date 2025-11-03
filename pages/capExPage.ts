@@ -6,11 +6,12 @@ import { formatNumberWithComma } from "../utils/formatters";
 
 export class CapExPage {
   page: Page;
-  capExRows: Locator;
+  capExRows: (label: string) => Locator;
   buttonCapExAtSidebar: Locator;
   inputCapExSearch: Locator;
   rowWithProjectName: (label: string) => Locator;
   cellJobCategory: (label: string) => Locator;
+  inputSearchCapExData: Locator;
 
   //Verification of Project Row
   cellRevisedBudgetProject: (label: string) => Locator;
@@ -18,10 +19,12 @@ export class CapExPage {
   cellOriginalContractProject: (label: string) => Locator;
   cellCurrentContractProject: (label: string) => Locator;
   cellRemainingContractProject: (label: string) => Locator;
+  rowScope: (bidName: string) => Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.capExRows = this.page.locator('//div[@role="row"]');
+    this.capExRows = (label: string) =>
+      this.page.locator(`//div[@role="row" and @row-index=${label}]`);
     this.buttonCapExAtSidebar = this.page.locator(
       '//span[contains(text(), "CapEx")]/ancestor::a[@class]'
     );
@@ -36,6 +39,9 @@ export class CapExPage {
       this.page.locator(
         `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]/following-sibling::div[1]`
       );
+    this.inputSearchCapExData = this.page.locator(
+      '//input[@placeholder="Search CapEx data..."]'
+    );
 
     //Verification of Rows
     this.cellRevisedBudgetProject = (label: string) =>
@@ -58,20 +64,21 @@ export class CapExPage {
       this.page.locator(
         `//div[@row-index="${label}"]/descendant::div[@col-id="remainingContract"]`
       );
+    this.rowScope = (bidName: string) =>
+      this.page.locator(
+        `//span[contains(text(), "${bidName}")]/ancestor::div[@role="row"]`
+      );
   }
 
   async capEx(projectName: string) {
     await this.buttonCapExAtSidebar.click();
     await expect(this.inputCapExSearch).toBeVisible();
-    await this.capExRows.nth(1).click();
-    for (let i = 0; i < 50; i++) {
-      if (await this.rowWithProjectName(projectName).isVisible()) {
-        break;
-      }
-      for (let j = 0; j <= 21; j++) {
-        await this.page.keyboard.press("ArrowDown");
-      }
-    }
+    await this.capExRows("0").first().click();
+    await this.inputSearchCapExData.fill(projectName);
     await this.cellJobCategory(projectName).dblclick();
+  }
+
+  async fillSearchInput(label: string) {
+    await this.inputSearchCapExData.fill(label);
   }
 }

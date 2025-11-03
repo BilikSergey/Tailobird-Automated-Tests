@@ -26,10 +26,15 @@ export class MainPage {
 
   //Create job form
   jobsTab: Locator;
+  buttonCreateJob: Locator;
+  inputTitleJob: Locator;
+  inputJobType: Locator;
+  buttonAddJob: Locator;
+
   hoveringButtonAddJob: Locator;
   clickableButtonAddJob: Locator;
   cellTitleJob: Locator;
-  inputTitleJob: Locator;
+
   cellJobType: Locator;
   capexOptionJobType: Locator;
   cellStartDate: Locator;
@@ -157,6 +162,19 @@ export class MainPage {
 
     //Create job form
     this.jobsTab = this.page.getByRole("tab", { name: "Jobs" });
+    this.buttonCreateJob = this.page.locator(
+      '//span[contains(text(),"Create Job")]/ancestor::button'
+    );
+    this.inputTitleJob = this.page.locator(
+      '//label[contains(text(),"Title")]/ancestor::div[1]/descendant::input'
+    );
+    this.inputJobType = this.page.locator(
+      '//label[contains(text(),"Job Type")]/ancestor::div[1]/descendant::input'
+    );
+    this.buttonAddJob = this.page.locator(
+      '//span[contains(text(), "add")]/ancestor::button'
+    );
+
     this.hoveringButtonAddJob = this.page
       .getByTestId("bt-add-row-menu")
       .filter({ visible: true });
@@ -166,9 +184,7 @@ export class MainPage {
     this.cellTitleJob = this.page
       .locator('[role="gridcell"][col-id="title"]')
       .last();
-    this.inputTitleJob = this.page.locator(
-      'input[data-testid="bird-table-cell-input"]'
-    );
+
     this.cellJobType = this.page
       .locator('div[col-id="job_type"]:has-text("Unit Interior")')
       .last();
@@ -389,9 +405,13 @@ export class MainPage {
   }
 
   async award() {
-    await this.vendorMenuAction.nth(0).scrollIntoViewIfNeeded();
-    await this.vendorMenuAction.nth(0).hover();
-    await this.vendorMenuAction.nth(0).click();
+    const box = await this.vendorMenuAction.nth(1).boundingBox();
+    if (box) {
+      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    }
+    await this.page.waitForTimeout(1000);
+    await this.vendorMenuAction.nth(1).click({ trial: false });
+    // await this.vendorMenuAction.nth(0).click();
     await this.buttonAward.click();
     await this.buttonConfirmAwarding.click();
   }
@@ -462,16 +482,29 @@ export class MainPage {
 
   async createJob(jobTitle: string) {
     await this.jobsTab.click();
-    await this.hoveringButtonAddJob.hover();
-    await this.clickableButtonAddJob.click();
-    await this.cellTitleJob.dblclick();
+    const box = await this.buttonCreateJob.boundingBox();
+    if (box) {
+      await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    }
+    await this.page.waitForTimeout(1000);
+    await this.buttonCreateJob.click({ trial: false });
+    // await this.buttonCreateJob.click();
     await this.inputTitleJob.fill(jobTitle);
-    await this.cellJobType.scrollIntoViewIfNeeded();
-    await this.cellJobType.hover();
-    await this.cellJobType.dblclick();
-    await this.capexOptionJobType.click();
-    await this.buttonViewDetails.click();
-    await this.inputCreatedJobName.waitFor({ state: "visible" });
+    await this.inputJobType.fill("Capex");
+    await this.page.keyboard.press("ArrowDown");
+    await this.page.keyboard.press("Enter");
+    await this.buttonAddJob.click();
+
+    // await this.hoveringButtonAddJob.hover();
+    // await this.clickableButtonAddJob.click();
+    // await this.cellTitleJob.dblclick();
+    // await this.inputTitleJob.fill(jobTitle);
+    // await this.cellJobType.scrollIntoViewIfNeeded();
+    // await this.cellJobType.hover();
+    // await this.cellJobType.dblclick();
+    // await this.capexOptionJobType.click();
+    // await this.buttonViewDetails.click();
+    // await this.inputCreatedJobName.waitFor({ state: "visible" });
   }
 
   async createProject(projectName: string) {

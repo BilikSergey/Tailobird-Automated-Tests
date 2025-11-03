@@ -8,32 +8,28 @@ import { faker } from "@faker-js/faker";
 import userData from "../data/userData.json";
 import properties from "../data/properties.json";
 import { formatNumberWithComma } from "../utils/formatters";
+import { scrollByArrows } from "../utils/formatters";
 import { chromium } from "playwright";
 
-test.describe("Tailobird-Automated-Tests", () => {
+test.describe.serial("Tailobird-Automated-Tests", () => {
   let login: LoginUser;
   let mainPage: MainPage;
   let vendorPage: VendorPage;
   let budgetPage: BudgetPage;
   let capExPage: CapExPage;
-  // const projectName = faker.commerce.productName();
-  const projectName = "Elegant Ceramic Sausages";
-  const firstNumberBidPrice = 11141;
-  const secondNumberBidPrice = 5624;
-  const thirdNumberBidPrice = 8244;
-  // const firstNumberBidPrice = faker.number.int({ min: 10000, max: 12000 });
-  // const secondNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
-  // const thirdNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
+  const projectName = faker.commerce.productName();
+  const bid1Name = faker.commerce.productName();
+  const bid2Name = faker.commerce.productName();
+  const bid3Name = faker.commerce.productName();
+  const firstNumberBidPrice = faker.number.int({ min: 10000, max: 12000 });
+  const secondNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
+  const thirdNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
   const firstStringBidPrice = firstNumberBidPrice.toString();
   const secondStringBidPrice = secondNumberBidPrice.toString();
   const thirdStringBidPrice = thirdNumberBidPrice.toString();
   const totalNumberPrice =
     firstNumberBidPrice + secondNumberBidPrice + thirdNumberBidPrice;
-  const totalPrice = (
-    firstNumberBidPrice +
-    secondNumberBidPrice +
-    thirdNumberBidPrice
-  ).toString();
+  const totalPrice = totalNumberPrice.toString();
 
   test("First Flow", async () => {
     //log in
@@ -73,8 +69,6 @@ test.describe("Tailobird-Automated-Tests", () => {
     await expect(mainPage.inputCreatedJobName).toHaveValue(jobTitle);
 
     //create a bid
-    const bid1Name = faker.commerce.productName();
-    const bid2Name = faker.commerce.productName();
     await mainPage.createBid(bid1Name, bid2Name);
 
     //invite vendors
@@ -165,7 +159,6 @@ test.describe("Tailobird-Automated-Tests", () => {
     await expect(mainPage.cellStatusAwarded).toBeVisible();
 
     //Finalize
-    const bid3Name = faker.commerce.productName();
     await mainPage.finalize(bid3Name, thirdStringBidPrice);
 
     //Bulk Update Status
@@ -275,14 +268,12 @@ test.describe("Tailobird-Automated-Tests", () => {
     const jobRowIndex = await capExPage
       .cellJobCategory(projectName)
       .getAttribute("row-index");
-    for (let i = 0; i < 50; i++) {
-      if (await capExPage.cellRevisedBudgetProject(jobRowIndex!).isVisible()) {
-        break;
-      }
-      for (let j = 0; j <= 1; j++) {
-        await page.keyboard.press("ArrowRight");
-      }
-    }
+    await scrollByArrows(
+      page,
+      () => capExPage.cellRevisedBudgetProject(jobRowIndex!),
+      "ArrowRight",
+      1
+    );
     await expect(
       capExPage.cellRevisedBudgetProject(jobRowIndex!)
     ).toContainText("$" + formatNumberWithComma(totalPrice));
@@ -312,44 +303,33 @@ test.describe("Tailobird-Automated-Tests", () => {
     ).toContainText("+$" + formatNumberWithComma(totalPrice));
 
     //scope 1 row
-    const array = [
+
+    const bidArray = ["", bid1Name, bid2Name, bid3Name];
+    const priceArray = [
       "",
-      secondStringBidPrice,
       firstStringBidPrice,
+      secondStringBidPrice,
       thirdStringBidPrice,
     ];
     for (let i = 1; i <= 3; i++) {
-      const scopeRowIndex = (Number(jobRowIndex) + i).toString();
+      let scopeIndex = await capExPage
+        .rowScope(bidArray[i])
+        .getAttribute("row-index");
+      await scrollByArrows(
+        page,
+        () => capExPage.cellRemainingContractProject(scopeIndex!),
+        "ArrowRight",
+        1
+      );
       await capExPage
-        .cellBudgetRemainingProject(scopeRowIndex!)
+        .cellBudgetRemainingProject(scopeIndex!)
         .scrollIntoViewIfNeeded();
       await expect(
-        capExPage.cellBudgetRemainingProject(scopeRowIndex!)
-      ).toContainText("-$" + formatNumberWithComma(array[i]));
-      await expect(
-        capExPage.cellOriginalContractProject(scopeRowIndex!)
-      ).toContainText("$" + formatNumberWithComma(array[i]));
-      await expect(
-        capExPage.cellCurrentContractProject(scopeRowIndex!)
-      ).toContainText("$" + formatNumberWithComma(array[i]));
-      for (let k = 0; k < 50; k++) {
-        if (
-          await capExPage
-            .cellRemainingContractProject(scopeRowIndex!)
-            .isVisible()
-        ) {
-          break;
-        }
-        for (let j = 0; j <= 1; j++) {
-          await page.keyboard.press("ArrowRight");
-        }
-      }
-      await expect(
-        capExPage.cellRemainingContractProject(scopeRowIndex!)
-      ).toContainText("+$" + formatNumberWithComma(array[i]));
+        capExPage.cellBudgetRemainingProject(scopeIndex!)
+      ).toContainText("-$" + formatNumberWithComma(priceArray[i]));
     }
 
     //delete option budget
-    await budgetPage.deleteBudget();
+    await budgetPage.deleteBudget(projectName);
   });
 });

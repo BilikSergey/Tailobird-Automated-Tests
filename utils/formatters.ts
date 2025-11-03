@@ -11,18 +11,17 @@ export function formatNumberWithComma(str: string) {
 
 export async function scrollByArrows(
   page: Page,
-  locator: Locator,
+  locator: () => Locator,
   directionOfArrow: string,
   quantityOfArrowSteps: number
 ) {
-  for (let i = 0; i < 50; i++) {
-    for (let i = 0; i < 50; i++) {
-      if (await locator.isVisible()) {
-        break;
-      }
-      for (let j = 0; j < quantityOfArrowSteps; j++) {
-        await page.keyboard.press("directionOfArrow");
-      }
+  const element = locator();
+  for (let i = 0; i < 1000; i++) {
+    if (await element.isVisible()) {
+      break;
+    }
+    for (let j = 0; j <= quantityOfArrowSteps; j++) {
+      await page.keyboard.press(directionOfArrow);
     }
   }
 }

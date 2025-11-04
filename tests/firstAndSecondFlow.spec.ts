@@ -44,13 +44,11 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       userData.existingUser.email,
       userData.existingUser.password
     );
-
     //verify whether page displays
     const items = ["Properties", "Category", "Budget", "CapEx"];
     for (const item of items) {
       await login.navLabel(item).first().waitFor({ state: "visible" });
     }
-
     //create a project
     await mainPage.createProject(projectName);
     await expect(mainPage.createdProjectName(projectName)).toBeVisible();
@@ -62,15 +60,12 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     await expect(
       mainPage.createdProjectProperty(properties.properties.property1)
     ).toBeVisible();
-
     //create a job
     const jobTitle = faker.commerce.product();
     await mainPage.createJob(jobTitle);
     await expect(mainPage.inputCreatedJobName).toHaveValue(jobTitle);
-
     //create a bid
     await mainPage.createBid(bid1Name, bid2Name);
-
     //invite vendors
     const organizationName = faker.company.name();
     await mainPage.inviteVendors(organizationName);
@@ -80,7 +75,6 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     await mainPage
       .cellCreatedVendorOrganizationName(organizationName)
       .waitFor({ state: "visible" });
-
     //Edit Bid On Behalf of Vendor
     const totalCostNumber1 = faker.number.int({ min: 10000, max: 12000 });
     const totalCostString1 = totalCostNumber1.toString();
@@ -95,13 +89,11 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       totalCostString1,
       totalCostString2
     );
-
     //Verification of Edition of Bids
     // await mainPage.cellEditedBidAmount.nth(1).scrollIntoViewIfNeeded();
     // await expect(mainPage.cellEditedBidAmount.nth(1)).toHaveText(
     //   "$" + formatNumberWithComma(sumOfTotalCostString1)
     // );
-
     //Vendor Account Log in
     const context2 = await browser.newContext();
     const page2 = await context2.newPage();
@@ -109,7 +101,6 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     vendorPage = new VendorPage(page2);
     await login.toNavigate();
     await login.login(userData.vendorUser.email, userData.vendorUser.password);
-
     //Edit Bid
     const sumOfTotalCostString2 = (
       firstNumberBidPrice + secondNumberBidPrice
@@ -123,7 +114,6 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     );
     const session1 = await page1.context().newCDPSession(page1);
     await session1.send("Page.bringToFront");
-
     //Verification of Edition
     // await page1.reload({ waitUntil: "networkidle" });
     // await expect(
@@ -131,7 +121,6 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     //     formatNumberWithComma(sumOfTotalCostString2)
     //   )
     // ).toBeVisible();
-
     //Level Bids
     await mainPage.clickButtonLevellingBid();
     await mainPage
@@ -153,18 +142,14 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     // await expect(mainPage.columnFooterOfBidLevelling.nth(5)).toHaveText(
     //   "$" + formatNumberWithComma(sumOfTotalCostString1)
     // );
-
     //Award
     await mainPage.award();
     await expect(mainPage.cellStatusAwarded).toBeVisible();
-
     //Finalize
     await mainPage.finalize(bid3Name, thirdStringBidPrice);
-
     //Bulk Update Status
     await mainPage.bulkUpdateStatus();
     await expect(mainPage.cellStatus(bid1Name)).toContainText("In Progress");
-
     //Verify if Contract is Awarded on Vednor's Side
     const session2 = await page2.context().newCDPSession(page2);
     await session2.send("Page.bringToFront");
@@ -183,13 +168,11 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       userData.existingUser.email,
       userData.existingUser.password
     );
-
     //verify whether page displays
     const items = ["Properties", "Category", "Budget", "CapEx"];
     for (const item of items) {
       await login.navLabel(item).first().waitFor({ state: "visible" });
     }
-
     //Budget
     const originalBudgetNumber = faker.number.int({ min: 40000, max: 70000 });
     const originalBudget = originalBudgetNumber.toString();
@@ -197,22 +180,19 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       properties.categoryBudget.securitySystem,
       originalBudget
     );
-
     //budget verification
-    await expect((await budgetPage.getCellRevisedBudget()).last()).toHaveText(
+    await expect((await budgetPage.cellRevisedBudget).last()).toHaveText(
       "$" + formatNumberWithComma(originalBudget)
     );
     await expect(budgetPage.cellOriginalBudget.last()).toHaveText(
       "$" + formatNumberWithComma(originalBudget)
     );
-
     //Allocation
     await budgetPage.allocation(
       projectName,
       properties.categoryBudget.securitySystem,
       totalPrice
     );
-
     //allocation verification
     const remainingBudget = (
       originalBudgetNumber - totalNumberPrice
@@ -226,7 +206,6 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     await expect(
       budgetPage.remainingFinalBudget(properties.categoryBudget.securitySystem)
     ).toHaveText("$" + formatNumberWithComma(remainingBudget));
-
     //CapEx Verification
     //Project row
     await capExPage.capEx(projectName);
@@ -235,9 +214,10 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       .getAttribute("row-index");
     await capExPage
       .cellRevisedBudgetProject(projectRowIndex!)
+      .first()
       .scrollIntoViewIfNeeded();
     await expect(
-      capExPage.cellRevisedBudgetProject(projectRowIndex!)
+      capExPage.cellRevisedBudgetProject(projectRowIndex!).first()
     ).toContainText("$" + formatNumberWithComma(totalPrice));
     await capExPage
       .cellBudgetRemainingProject(projectRowIndex!)
@@ -263,7 +243,6 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     await expect(
       capExPage.cellRemainingContractProject(projectRowIndex!)
     ).toContainText("+$" + formatNumberWithComma(totalPrice));
-
     //Job row
     const jobRowIndex = await capExPage
       .cellJobCategory(projectName)
@@ -301,9 +280,7 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     await expect(
       capExPage.cellRemainingContractProject(jobRowIndex!)
     ).toContainText("+$" + formatNumberWithComma(totalPrice));
-
     //scope 1 row
-
     const bidArray = ["", bid1Name, bid2Name, bid3Name];
     const priceArray = [
       "",
@@ -328,7 +305,6 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
         capExPage.cellBudgetRemainingProject(scopeIndex!)
       ).toContainText("-$" + formatNumberWithComma(priceArray[i]));
     }
-
     //delete option budget
     await budgetPage.deleteBudget(projectName);
   });

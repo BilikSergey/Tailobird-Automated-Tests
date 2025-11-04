@@ -1,79 +1,88 @@
 import { expect, Locator, Page } from "@playwright/test";
-import userData from "../data/userData.json";
-import properties from "../data/properties.json";
-import links from "../data/links.json";
-import { formatNumberWithComma } from "../utils/formatters";
+
+// Static locators
+const buttonCapExAtSidebar =
+  '//span[contains(text(), "CapEx")]/ancestor::a[@class]';
+const inputCapExSearch = '//input[@placeholder="Search CapEx data..."]';
+const inputSearchCapExData = '//input[@placeholder="Search CapEx data..."]';
+
+// Dynamic locators
+const capExRows = (label: string) =>
+  `//div[@role="row" and @row-index=${label}]`;
+const rowWithProjectName = (label: string) =>
+  `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]`;
+const cellJobCategory = (label: string) =>
+  `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]/following-sibling::div[1]`;
+const cellRevisedBudgetProject = (label: string) =>
+  `//div[@row-index="${label}"]/descendant::div[@col-id="revisedBudget"]`;
+const cellBudgetRemainingProject = (label: string) =>
+  `//div[@row-index="${label}"]/descendant::div[@col-id="budgetRemaining"]`;
+const cellOriginalContractProject = (label: string) =>
+  `//div[@row-index="${label}"]/descendant::div[@col-id="originalContractValue"]`;
+const cellCurrentContractProject = (label: string) =>
+  `//div[@row-index="${label}"]/descendant::div[@col-id="contractValue"]`;
+const cellRemainingContractProject = (label: string) =>
+  `//div[@row-index="${label}"]/descendant::div[@col-id="remainingContract"]`;
+const rowScope = (bidName: string) =>
+  `//span[contains(text(), "${bidName}")]/ancestor::div[@role="row"]`;
 
 export class CapExPage {
-  page: Page;
-  capExRows: (label: string) => Locator;
-  buttonCapExAtSidebar: Locator;
-  inputCapExSearch: Locator;
-  rowWithProjectName: (label: string) => Locator;
-  cellJobCategory: (label: string) => Locator;
-  inputSearchCapExData: Locator;
+  constructor(private page: Page) {}
 
-  //Verification of Project Row
-  cellRevisedBudgetProject: (label: string) => Locator;
-  cellBudgetRemainingProject: (label: string) => Locator;
-  cellOriginalContractProject: (label: string) => Locator;
-  cellCurrentContractProject: (label: string) => Locator;
-  cellRemainingContractProject: (label: string) => Locator;
-  rowScope: (bidName: string) => Locator;
-
-  constructor(page: Page) {
-    this.page = page;
-    this.capExRows = (label: string) =>
-      this.page.locator(`//div[@role="row" and @row-index=${label}]`);
-    this.buttonCapExAtSidebar = this.page.locator(
-      '//span[contains(text(), "CapEx")]/ancestor::a[@class]'
-    );
-    this.inputCapExSearch = this.page.locator(
-      '//input[@placeholder="Search CapEx data..."]'
-    );
-    this.rowWithProjectName = (label: string) =>
-      this.page.locator(
-        `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]`
-      );
-    this.cellJobCategory = (label: string) =>
-      this.page.locator(
-        `//span[contains(text(), "${label}")]/ancestor::div[@role="row"]/following-sibling::div[1]`
-      );
-    this.inputSearchCapExData = this.page.locator(
-      '//input[@placeholder="Search CapEx data..."]'
-    );
-
-    //Verification of Rows
-    this.cellRevisedBudgetProject = (label: string) =>
-      this.page.locator(
-        `//div[@row-index="${label}"]/descendant::div[@col-id="revisedBudget"]`
-      );
-    this.cellBudgetRemainingProject = (label: string) =>
-      this.page.locator(
-        `//div[@row-index="${label}"]/descendant::div[@col-id="budgetRemaining"]`
-      );
-    this.cellOriginalContractProject = (label: string) =>
-      this.page.locator(
-        `//div[@row-index="${label}"]/descendant::div[@col-id="originalContractValue"]`
-      );
-    this.cellCurrentContractProject = (label: string) =>
-      this.page.locator(
-        `//div[@row-index="${label}"]/descendant::div[@col-id="contractValue"]`
-      );
-    this.cellRemainingContractProject = (label: string) =>
-      this.page.locator(
-        `//div[@row-index="${label}"]/descendant::div[@col-id="remainingContract"]`
-      );
-    this.rowScope = (bidName: string) =>
-      this.page.locator(
-        `//span[contains(text(), "${bidName}")]/ancestor::div[@role="row"]`
-      );
+  // === Getters for static locators ===
+  get buttonCapExAtSidebar() {
+    return this.page.locator(buttonCapExAtSidebar);
   }
 
+  get inputCapExSearch() {
+    return this.page.locator(inputCapExSearch);
+  }
+
+  get inputSearchCapExData() {
+    return this.page.locator(inputSearchCapExData);
+  }
+
+  // === Dynamic locators ===
+  capExRows(label: string) {
+    return this.page.locator(capExRows(label));
+  }
+
+  rowWithProjectName(label: string) {
+    return this.page.locator(rowWithProjectName(label));
+  }
+
+  cellJobCategory(label: string) {
+    return this.page.locator(cellJobCategory(label));
+  }
+
+  cellRevisedBudgetProject(label: string) {
+    return this.page.locator(cellRevisedBudgetProject(label));
+  }
+
+  cellBudgetRemainingProject(label: string) {
+    return this.page.locator(cellBudgetRemainingProject(label));
+  }
+
+  cellOriginalContractProject(label: string) {
+    return this.page.locator(cellOriginalContractProject(label));
+  }
+
+  cellCurrentContractProject(label: string) {
+    return this.page.locator(cellCurrentContractProject(label));
+  }
+
+  cellRemainingContractProject(label: string) {
+    return this.page.locator(cellRemainingContractProject(label));
+  }
+
+  rowScope(bidName: string) {
+    return this.page.locator(rowScope(bidName));
+  }
+
+  // Methods
   async capEx(projectName: string) {
     await this.buttonCapExAtSidebar.click();
     await expect(this.inputCapExSearch).toBeVisible();
-    await this.capExRows("0").first().click();
     await this.inputSearchCapExData.fill(projectName);
     await this.cellJobCategory(projectName).dblclick();
   }

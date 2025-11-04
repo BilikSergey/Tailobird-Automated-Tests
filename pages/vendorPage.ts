@@ -1,50 +1,54 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { formatNumberWithComma } from "../utils/formatters";
 
+const buttonSideBarBidContracts =
+  '//a[@class]/descendant::span[contains(text(), "Bids & Contracts")]';
+const searchInput =
+  '//input[@placeholder="Search..." and @data-variant="default"]';
+const buttonViewDetails =
+  '//button/ancestor::div[@role="gridcell" and @col-id="actions"]';
+const buttonAcceptBid =
+  '//span[contains(text(), "Accept Bid")]/ancestor::button';
+const inputTotalCostCell = '//input[@data-testid="bird-table-currency-input"]';
+const buttonSubmitBid =
+  '//button/descendant::span[contains(text(), "Submit Bid")]';
+const formContractAwarded =
+  '//span[contains(text(), "Contract Already Awarded")]/ancestor::div[@role="alert"]';
+const cellTotalCost = (label: string) =>
+  `//p[contains(text(), "${label}")]/ancestor::div[@role="row"]//div[@role="gridcell" and @col-id="total_price"]`;
+
 export class VendorPage {
-  page: Page;
-  buttonSideBarBidContracts: Locator;
-  searchInput: Locator;
-  buttonViewDetails: Locator;
-  buttonAcceptBid: Locator;
-  cellTotalCost: (label: string) => Locator;
-  inputTotalCostCell: Locator;
-  buttonSubmitBid: Locator;
+  constructor(private page: Page) {}
 
-  //Verify if Contract is Awarded on Vednor's Side
-  formContractAwarded: Locator;
-
-  constructor(page: Page) {
-    this.page = page;
-    this.buttonSideBarBidContracts = this.page.locator(
-      '//a[@class]/descendant::span[contains(text(), "Bids & Contracts")]'
-    );
-    this.searchInput = this.page.locator(
-      '//input[@placeholder="Search..." and @data-variant="default"]'
-    );
-    this.buttonViewDetails = this.page.locator(
-      '//button/ancestor::div[@role="gridcell" and @col-id="actions"]'
-    );
-    this.buttonAcceptBid = this.page.locator(
-      '//span[contains(text(), "Accept Bid")]/ancestor::button'
-    );
-    this.cellTotalCost = (label: string) =>
-      this.page.locator(
-        `//p[contains(text(), "${label}")]/ancestor::div[@role="row"]//div[@role="gridcell" and @col-id="total_price"]`
-      );
-    this.inputTotalCostCell = this.page.locator(
-      '//input[@data-testid="bird-table-currency-input"]'
-    );
-    this.buttonSubmitBid = this.page.locator(
-      '//button/descendant::span[contains(text(), "Submit Bid")]'
-    );
-
-    //Verify if Contract is Awarded on Vednor's Side
-    this.formContractAwarded = this.page.locator(
-      '//span[contains(text(), "Contract Already Awarded")]/ancestor::div[@role="alert"]'
-    );
+  // Getters for static locators
+  get buttonSideBarBidContracts(): Locator {
+    return this.page.locator(buttonSideBarBidContracts);
+  }
+  get searchInput(): Locator {
+    return this.page.locator(searchInput);
+  }
+  get buttonViewDetails(): Locator {
+    return this.page.locator(buttonViewDetails);
+  }
+  get buttonAcceptBid(): Locator {
+    return this.page.locator(buttonAcceptBid);
+  }
+  get inputTotalCostCell(): Locator {
+    return this.page.locator(inputTotalCostCell);
+  }
+  get buttonSubmitBid(): Locator {
+    return this.page.locator(buttonSubmitBid);
+  }
+  get formContractAwarded(): Locator {
+    return this.page.locator(formContractAwarded);
   }
 
+  // Dynamic locator
+  cellTotalCost(label: string) {
+    return this.page.locator(cellTotalCost(label));
+  }
+
+  // Method
   async addTotalCost(
     projectName: string,
     bid1Name: string,
@@ -57,10 +61,9 @@ export class VendorPage {
     await expect(this.buttonViewDetails).toHaveCount(1, { timeout: 5000 });
     await this.buttonViewDetails.click();
     await this.buttonAcceptBid.waitFor({ state: "visible" });
-    this.page.once("dialog", async (dialog) => {
-      await dialog.accept();
-    });
+    this.page.once("dialog", (dialog) => dialog.accept());
     await this.buttonAcceptBid.click();
+    // Fill first bid
     await this.cellTotalCost(bid1Name).dblclick();
     await this.inputTotalCostCell.fill(totalCostString1);
     await this.inputTotalCostCell.press("Enter");
@@ -68,6 +71,7 @@ export class VendorPage {
       "$" + formatNumberWithComma(totalCostString1),
       { timeout: 5000 }
     );
+    // Fill second bid
     await this.cellTotalCost(bid2Name).dblclick();
     await this.inputTotalCostCell.fill(totalCostString2);
     await this.inputTotalCostCell.press("Enter");
@@ -75,9 +79,8 @@ export class VendorPage {
       "$" + formatNumberWithComma(totalCostString2),
       { timeout: 5000 }
     );
-    this.page.once("dialog", async (dialog) => {
-      await dialog.accept();
-    });
+    // Submit
+    this.page.once("dialog", (dialog) => dialog.accept());
     await this.buttonSubmitBid.click();
   }
 }

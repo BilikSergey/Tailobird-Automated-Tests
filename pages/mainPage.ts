@@ -382,15 +382,19 @@ export class MainPage {
   }
 
   // Methods
-  async createProject(projectName: string) {
+  async createProject(
+    projectName: string,
+    startProjectDate: string,
+    endProjectDate: string
+  ) {
     await this.buttonSideBarProjects.click();
     await this.entireProjectForm.waitFor({ state: "visible" });
     await this.buttonCreateProject.click();
     await this.inputProjectName.fill(projectName);
     await this.inputProjectProperty.fill(properties.properties.property1);
     await this.buttonFirstProjectProperty.click();
-    await this.inputStartDate.fill(userData.date.startDate);
-    await this.inputEndDate.fill(userData.date.endDate);
+    await this.inputStartDate.fill(startProjectDate);
+    await this.inputEndDate.fill(endProjectDate);
     await this.buttonAddProject.click();
     await this.projectOverviewForm.waitFor({ state: "visible" });
   }

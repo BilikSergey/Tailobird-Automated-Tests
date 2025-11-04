@@ -8,6 +8,21 @@ export function formatNumberWithComma(str: string) {
   }
   return str;
 }
+export function formatDateRange(startDate: string, endDate: string): string {
+  const options: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  };
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const formattedStart = start.toLocaleDateString("en-US", options);
+  const formattedEnd = end.toLocaleDateString("en-US", options);
+
+  return `${formattedStart} -> ${formattedEnd}`;
+}
 
 export async function scrollByArrows(
   page: Page,

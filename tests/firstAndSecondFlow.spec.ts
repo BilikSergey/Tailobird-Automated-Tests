@@ -8,6 +8,7 @@ import { faker } from "@faker-js/faker";
 import userData from "../data/userData.json";
 import properties from "../data/properties.json";
 import { formatNumberWithComma } from "../utils/formatters";
+import { formatDateRange } from "../utils/formatters";
 import { scrollByArrows } from "../utils/formatters";
 import { chromium } from "playwright";
 
@@ -18,6 +19,8 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
   let budgetPage: BudgetPage;
   let capExPage: CapExPage;
   const projectName = faker.commerce.productName();
+  const startProjectDate = faker.date.future().toISOString().split("T")[0];
+  const endProjectDate = faker.date.future().toISOString().split("T")[0];
   const bid1Name = faker.commerce.productName();
   const bid2Name = faker.commerce.productName();
   const bid3Name = faker.commerce.productName();
@@ -50,11 +53,11 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       await login.navLabel(item).first().waitFor({ state: "visible" });
     }
     //create a project
-    await mainPage.createProject(projectName);
+    await mainPage.createProject(projectName, startProjectDate, endProjectDate);
     await expect(mainPage.createdProjectName(projectName)).toBeVisible();
     await expect(
       mainPage.createdProjectDateDuration(
-        userData.dateHumanReadableFormat.duration
+        formatDateRange(startProjectDate, endProjectDate)
       )
     ).toBeVisible();
     await expect(

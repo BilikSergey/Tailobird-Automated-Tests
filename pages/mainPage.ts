@@ -89,8 +89,7 @@ const crossButton =
   "//h2[contains(text(), 'Edit Bid On Behalf of Vendor')]/ancestor::header//button";
 const cellEditedBidAmount = '[role="gridcell"][col-id="bid_cost"]';
 const cellEditedAppliedBidAmount = (label: string) =>
-  `//p[contains(text(), "${label}")]/ancestor::div[@role="row"]/div[@col-id="status" and @role="gridcell"]/descendant::p[contains (text(), "Submitted")]`;
-
+  `//p[contains (text(), "Submitted")]/ancestor::div[@role="row"]/descendant::p[contains(text(), "${label}")]`;
 // Level Bid
 const buttonBidLevelling =
   '(//p[contains(text(), "Bid Book")]/ancestor::div[contains(@class, "mantine-Card-root")]//button[@class])[7]';

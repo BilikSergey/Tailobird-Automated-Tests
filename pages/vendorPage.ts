@@ -57,13 +57,21 @@ export class VendorPage {
     totalCostString2: string
   ) {
     await this.buttonSideBarBidContracts.click();
+    await expect(this.searchInput).toBeVisible();
+    let prevCount = await this.buttonViewDetails.count();
     await this.searchInput.fill(projectName);
-    await expect(this.buttonViewDetails).toHaveCount(1, { timeout: 5000 });
-    await this.buttonViewDetails.click();
+    await expect
+      .poll(async () => {
+        const currentCount = await this.buttonViewDetails.count();
+        return currentCount;
+      })
+      .not.toBe(prevCount);
+    await this.buttonViewDetails.last().click();
     await this.buttonAcceptBid.waitFor({ state: "visible" });
     this.page.once("dialog", (dialog) => dialog.accept());
     await this.buttonAcceptBid.click();
     // Fill first bid
+    await expect(this.buttonSubmitBid).toBeVisible();
     await this.cellTotalCost(bid1Name).dblclick();
     await this.inputTotalCostCell.fill(totalCostString1);
     await this.inputTotalCostCell.press("Enter");

@@ -21,9 +21,13 @@ export function formatDateRange(startDate: string, endDate: string): string {
 }
 export async function expectToBeScrollable(
   locator: Locator,
-  price: string
+  price: string,
+  convert: boolean
 ) {
-  const formatted = "$" + formatNumberWithComma(price);
+  let formatted = price;
+  if (convert) {
+    formatted = "$" + formatNumberWithComma(price);
+  }
   await expect(async () => {
     await locator.scrollIntoViewIfNeeded();
     const text = await locator.innerText();

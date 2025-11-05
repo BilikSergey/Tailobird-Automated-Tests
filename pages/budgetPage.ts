@@ -62,11 +62,11 @@ export class BudgetPage {
   get clickableButtonAddBudget() {
     return this.page.locator(clickableButtonAddBudget);
   }
-  get cellsCategory() {
-    return this.page.locator(cellsCategory);
-  }
   get inputCategory() {
     return this.page.locator(inputCategory);
+  }
+  get cellsCategory() {
+    return this.page.locator(cellsCategory);
   }
   get inputRevisedBudget() {
     return this.page.locator(inputRevisedBudget);
@@ -140,10 +140,11 @@ export class BudgetPage {
     await this.hoveringButtonAddBudget.hover();
     await this.clickableButtonAddBudget.click();
     await expect(this.cellsCategory).toHaveCount(quantityOfRows + 1);
-    await this.cellsCategory.first().dblclick();
+    await this.page.waitForTimeout(1000);
+    await this.cellsCategory.last().dblclick();
     await this.inputCategory.fill(certainOption);
     await this.categoryOption(certainOption).click();
-    await expect(this.cellsCategory.first()).toContainText(certainOption);
+    await expect(this.cellsCategory.last()).toContainText(certainOption);
     const box = await this.cellRevisedBudget.last().boundingBox();
     if (box) {
       await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

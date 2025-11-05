@@ -19,7 +19,6 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
   let vendorPage: VendorPage;
   let budgetPage: BudgetPage;
   let capExPage: CapExPage;
-  const projectName = faker.commerce.productName();
   const startProjectDate = faker.date.future().toISOString().split("T")[0];
   const endProjectDate = faker.date.future().toISOString().split("T")[0];
   const bid1Name = faker.commerce.productName();
@@ -31,13 +30,15 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
   const firstStringBidPrice = firstNumberBidPrice.toString();
   const secondStringBidPrice = secondNumberBidPrice.toString();
   const thirdStringBidPrice = thirdNumberBidPrice.toString();
+  const projectName = faker.commerce.productName() + firstStringBidPrice;
+  const jobTitle = faker.commerce.product() + secondNumberBidPrice;
   const totalNumberPrice =
     firstNumberBidPrice + secondNumberBidPrice + thirdNumberBidPrice;
   const totalPrice = totalNumberPrice.toString();
 
   test("First Flow", async () => {
     //log in
-    const browser = await chromium.launch({ headless: false });
+    const browser = await chromium.launch({ headless: true });
     const context1 = await browser.newContext();
     const page1 = await context1.newPage();
     login = new LoginUser(page1);
@@ -65,7 +66,6 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       mainPage.createdProjectProperty(properties.properties.property1)
     ).toBeVisible();
     //create a job
-    const jobTitle = faker.commerce.product();
     await mainPage.createJob(jobTitle);
     await expect(mainPage.inputCreatedJobName(jobTitle)).toBeVisible();
     //create a bid
@@ -95,11 +95,10 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     );
     //Verification of Edition of Bids
     await expect(mainPage.hoveringButtonAddBid).toBeVisible();
-    await mainPage.cellEditedBidAmount.nth(1).waitFor({ state: "visible" });
-    await page1.waitForTimeout(1000);
-    await mainPage.cellEditedBidAmount.nth(1).scrollIntoViewIfNeeded();
-    await expect(mainPage.cellEditedBidAmount.nth(1)).toHaveText(
-      "$" + formatNumberWithComma(sumOfTotalCostString1)
+    await expectToBeScrollable(
+      mainPage.cellEditedBidAmount.nth(1),
+      sumOfTotalCostString1,
+      true
     );
     //Vendor Account Log in
     const context2 = await browser.newContext();
@@ -124,29 +123,28 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     //Verification of Edition
     await page1.reload({ waitUntil: "networkidle" });
     await expect(mainPage.hoveringButtonAddBid).toBeVisible();
-    await mainPage
-      .cellEditedAppliedBidAmount(formatNumberWithComma(sumOfTotalCostString2))
-      .first()
-      .scrollIntoViewIfNeeded({ timeout: 5000 });
-    await expect(
-      mainPage.cellEditedAppliedBidAmount(
-        formatNumberWithComma(sumOfTotalCostString2)
-      )
-    ).toBeVisible();
+    await expectToBeScrollable(
+      mainPage
+        .cellEditedAppliedBidAmount(
+          formatNumberWithComma(sumOfTotalCostString2)
+        )
+        .first(),
+      sumOfTotalCostString2,
+      true
+    );
     //Level Bids
     await mainPage.clickButtonLevellingBid();
-    await mainPage
-      .columnHeadersOfBidLevelling(userData.existingUser.organization)
-      .nth(4)
-      .scrollIntoViewIfNeeded();
-    await expect(
+    await expectToBeScrollable(
       mainPage
         .columnHeadersOfBidLevelling(userData.existingUser.organization)
-        .nth(4)
-    ).toHaveText(userData.existingUser.organization);
-    await mainPage.columnFooterOfBidLevelling.nth(4).scrollIntoViewIfNeeded();
-    await expect(mainPage.columnFooterOfBidLevelling.nth(4)).toHaveText(
-      "$" + formatNumberWithComma(sumOfTotalCostString2)
+        .nth(4),
+      userData.existingUser.organization,
+      false
+    );
+    await expectToBeScrollable(
+      mainPage.columnFooterOfBidLevelling.nth(4),
+      sumOfTotalCostString2,
+      true
     );
     await expect(
       mainPage.columnHeadersOfBidLevelling(organizationName).nth(5)
@@ -186,7 +184,7 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       await login.navLabel(item).first().waitFor({ state: "visible" });
     }
     //Budget
-    const originalBudgetNumber = faker.number.int({ min: 40000, max: 70000 });
+    const originalBudgetNumber = faker.number.int({ min: 120000, max: 150000 });
     const originalBudget = originalBudgetNumber.toString();
     await budgetPage.budget(
       properties.categoryBudget.securitySystem,
@@ -227,39 +225,37 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     await expect(
       capExPage.cellRevisedBudgetProject(projectRowIndex!).first()
     ).toBeVisible();
-    await capExPage
-      .cellRevisedBudgetProject(projectRowIndex!)
-      .first()
-      .scrollIntoViewIfNeeded();
-    
-    await expect(
-      capExPage.cellRevisedBudgetProject(projectRowIndex!).first()
-    ).toContainText("$" + formatNumberWithComma(totalPrice));
-    await capExPage
-      .cellBudgetRemainingProject(projectRowIndex!)
-      .scrollIntoViewIfNeeded();
-    await expect(
-      capExPage.cellBudgetRemainingProject(projectRowIndex!)
-    ).toContainText("-$" + formatNumberWithComma(totalPrice));
-    await capExPage
-      .cellOriginalContractProject(projectRowIndex!)
-      .scrollIntoViewIfNeeded();
-    await expect(
-      capExPage.cellOriginalContractProject(projectRowIndex!)
-    ).toContainText("$" + formatNumberWithComma(totalPrice));
-    await capExPage
-      .cellCurrentContractProject(projectRowIndex!)
-      .scrollIntoViewIfNeeded();
-    await expect(
-      capExPage.cellCurrentContractProject(projectRowIndex!)
-    ).toContainText("$" + formatNumberWithComma(totalPrice));
-    await capExPage
-      .cellRemainingContractProject(projectRowIndex!)
-      .scrollIntoViewIfNeeded();
-    await expect(
-      capExPage.cellRemainingContractProject(projectRowIndex!)
-    ).toContainText("+$" + formatNumberWithComma(totalPrice));
+    await expectToBeScrollable(
+      capExPage.cellRevisedBudgetProject(projectRowIndex!).first(),
+      totalPrice,
+      true
+    );
+    await expectToBeScrollable(
+      capExPage.cellBudgetRemainingProject(projectRowIndex!),
+      totalPrice,
+      true
+    );
+    await expectToBeScrollable(
+      capExPage.cellOriginalContractProject(projectRowIndex!),
+      totalPrice,
+      true
+    );
+    await expectToBeScrollable(
+      capExPage.cellCurrentContractProject(projectRowIndex!),
+      totalPrice,
+      true
+    );
+    await expectToBeScrollable(
+      capExPage.cellRemainingContractProject(projectRowIndex!),
+      totalPrice,
+      true
+    );
     //Job row
+    await expectToBeScrollable(
+      capExPage.cellJobCategory(projectName),
+      jobTitle,
+      false
+    );
     const jobRowIndex = await capExPage
       .cellJobCategory(projectName)
       .getAttribute("row-index");
@@ -272,30 +268,26 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     await expect(
       capExPage.cellRevisedBudgetProject(jobRowIndex!)
     ).toContainText("$" + formatNumberWithComma(totalPrice));
-    await capExPage
-      .cellBudgetRemainingProject(jobRowIndex!)
-      .scrollIntoViewIfNeeded();
-    await expect(
-      capExPage.cellBudgetRemainingProject(jobRowIndex!)
-    ).toContainText("-$" + formatNumberWithComma(totalPrice));
-    await capExPage
-      .cellOriginalContractProject(jobRowIndex!)
-      .scrollIntoViewIfNeeded();
-    await expect(
-      capExPage.cellOriginalContractProject(jobRowIndex!)
-    ).toContainText("$" + formatNumberWithComma(totalPrice));
-    await capExPage
-      .cellCurrentContractProject(jobRowIndex!)
-      .scrollIntoViewIfNeeded();
-    await expect(
-      capExPage.cellCurrentContractProject(jobRowIndex!)
-    ).toContainText("$" + formatNumberWithComma(totalPrice));
-    await capExPage
-      .cellRemainingContractProject(jobRowIndex!)
-      .scrollIntoViewIfNeeded();
-    await expect(
-      capExPage.cellRemainingContractProject(jobRowIndex!)
-    ).toContainText("+$" + formatNumberWithComma(totalPrice));
+    await expectToBeScrollable(
+      capExPage.cellBudgetRemainingProject(jobRowIndex!),
+      totalPrice,
+      true
+    );
+    await expectToBeScrollable(
+      capExPage.cellOriginalContractProject(jobRowIndex!),
+      totalPrice,
+      true
+    );
+    await expectToBeScrollable(
+      capExPage.cellCurrentContractProject(jobRowIndex!),
+      totalPrice,
+      true
+    );
+    await expectToBeScrollable(
+      capExPage.cellRemainingContractProject(jobRowIndex!),
+      totalPrice,
+      true
+    );
     //scope 1 row
     const bidArray = ["", bid1Name, bid2Name, bid3Name];
     const priceArray = [
@@ -314,12 +306,11 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
         "ArrowRight",
         1
       );
-      await capExPage
-        .cellBudgetRemainingProject(scopeIndex!)
-        .scrollIntoViewIfNeeded();
-      await expect(
-        capExPage.cellBudgetRemainingProject(scopeIndex!)
-      ).toContainText("-$" + formatNumberWithComma(priceArray[i]));
+      await expectToBeScrollable(
+        capExPage.cellBudgetRemainingProject(scopeIndex!),
+        priceArray[i],
+        true
+      );
     }
     //delete option budget
     await budgetPage.deleteBudget(projectName);

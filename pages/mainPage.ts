@@ -42,7 +42,8 @@ const cellStartDate = '[role="gridcell"][col-id="start_date"]';
 const buttonCalendarNextMonth = 'button[data-direction="next"]';
 const cellEndDate = '[role="gridcell"][col-id="end_date"]';
 const buttonViewDetails = 'button[title="View Details"]';
-const inputCreatedJobName = 'input[placeholder="Enter job name"]';
+const inputCreatedJobName = (label: string) =>
+  `//p[contains(text(), "Job Overview")]/ancestor::div[contains(@class, "mantine-Paper-root")]/descendant::p[contains(text(),"${label}")]`;
 const inputCreatedJobStartDate =
   'div:has-text("Start Date:") button[aria-label]';
 const inputCreatedJobEndDate = 'div:has-text("End Date:") button[aria-label]';
@@ -86,6 +87,9 @@ const entireEditSection =
 const inputTotalCost = 'input[data-testid="bird-table-currency-input"]';
 const crossButton =
   "//h2[contains(text(), 'Edit Bid On Behalf of Vendor')]/ancestor::header//button";
+const cellEditedBidAmount = '[role="gridcell"][col-id="bid_cost"]';
+const cellEditedAppliedBidAmount = (label: string) =>
+  `//p[contains(text(), "${label}")]/ancestor::div[@role="row"]/div[@col-id="status" and @role="gridcell"]/descendant::p[contains (text(), "Submitted")]`;
 
 // Level Bid
 const buttonBidLevelling =
@@ -218,9 +222,6 @@ export class MainPage {
   get buttonViewDetails() {
     return this.page.locator(buttonViewDetails).last();
   }
-  get inputCreatedJobName() {
-    return this.page.locator(inputCreatedJobName);
-  }
   get inputCreatedJobStartDate() {
     return this.page.locator(inputCreatedJobStartDate);
   }
@@ -300,6 +301,9 @@ export class MainPage {
   get crossButton() {
     return this.page.locator(crossButton);
   }
+  get cellEditedBidAmount() {
+    return this.page.locator(cellEditedBidAmount);
+  }
   get buttonBidLevelling() {
     return this.page.locator(buttonBidLevelling);
   }
@@ -358,6 +362,9 @@ export class MainPage {
   createdProjectProperty(label: string) {
     return this.page.locator(createdProjectProperty, { hasText: label });
   }
+  inputCreatedJobName(label: string) {
+    return this.page.locator(inputCreatedJobName(label));
+  }
   cellCreatedVendorOrganizationName(name: string) {
     return this.page.locator(cellCreatedVendorOrganizationName, {
       hasText: name,
@@ -379,6 +386,9 @@ export class MainPage {
   }
   cellStatus(label: string) {
     return this.page.locator(cellStatus(label));
+  }
+  cellEditedAppliedBidAmount(label: string) {
+    return this.page.locator(cellEditedAppliedBidAmount(label));
   }
 
   // Methods

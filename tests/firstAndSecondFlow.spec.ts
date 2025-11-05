@@ -10,6 +10,7 @@ import properties from "../data/properties.json";
 import { formatNumberWithComma } from "../utils/formatters";
 import { formatDateRange } from "../utils/formatters";
 import { scrollByArrows } from "../utils/formatters";
+import { expectToBeScrollable } from "../utils/formatters";
 import { chromium } from "playwright";
 
 test.describe.serial("Tailobird-Automated-Tests", () => {
@@ -25,8 +26,8 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
   const bid2Name = faker.commerce.productName();
   const bid3Name = faker.commerce.productName();
   const firstNumberBidPrice = faker.number.int({ min: 10000, max: 12000 });
-  const secondNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
-  const thirdNumberBidPrice = faker.number.int({ min: 1000, max: 9000 });
+  const secondNumberBidPrice = faker.number.int({ min: 10000, max: 12000 });
+  const thirdNumberBidPrice = faker.number.int({ min: 10000, max: 12000 });
   const firstStringBidPrice = firstNumberBidPrice.toString();
   const secondStringBidPrice = secondNumberBidPrice.toString();
   const thirdStringBidPrice = thirdNumberBidPrice.toString();
@@ -66,7 +67,7 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     //create a job
     const jobTitle = faker.commerce.product();
     await mainPage.createJob(jobTitle);
-    await expect(mainPage.inputCreatedJobName).toHaveValue(jobTitle);
+    await expect(mainPage.inputCreatedJobName(jobTitle)).toBeVisible();
     //create a bid
     await mainPage.createBid(bid1Name, bid2Name);
     //invite vendors
@@ -93,10 +94,13 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       totalCostString2
     );
     //Verification of Edition of Bids
-    // await mainPage.cellEditedBidAmount.nth(1).scrollIntoViewIfNeeded();
-    // await expect(mainPage.cellEditedBidAmount.nth(1)).toHaveText(
-    //   "$" + formatNumberWithComma(sumOfTotalCostString1)
-    // );
+    await expect(mainPage.hoveringButtonAddBid).toBeVisible();
+    await mainPage.cellEditedBidAmount.nth(1).waitFor({ state: "visible" });
+    await page1.waitForTimeout(1000);
+    await mainPage.cellEditedBidAmount.nth(1).scrollIntoViewIfNeeded();
+    await expect(mainPage.cellEditedBidAmount.nth(1)).toHaveText(
+      "$" + formatNumberWithComma(sumOfTotalCostString1)
+    );
     //Vendor Account Log in
     const context2 = await browser.newContext();
     const page2 = await context2.newPage();
@@ -118,12 +122,17 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     const session1 = await page1.context().newCDPSession(page1);
     await session1.send("Page.bringToFront");
     //Verification of Edition
-    // await page1.reload({ waitUntil: "networkidle" });
-    // await expect(
-    //   mainPage.cellEditedAppliedBidAmount(
-    //     formatNumberWithComma(sumOfTotalCostString2)
-    //   )
-    // ).toBeVisible();
+    await page1.reload({ waitUntil: "networkidle" });
+    await expect(mainPage.hoveringButtonAddBid).toBeVisible();
+    await mainPage
+      .cellEditedAppliedBidAmount(formatNumberWithComma(sumOfTotalCostString2))
+      .first()
+      .scrollIntoViewIfNeeded({ timeout: 5000 });
+    await expect(
+      mainPage.cellEditedAppliedBidAmount(
+        formatNumberWithComma(sumOfTotalCostString2)
+      )
+    ).toBeVisible();
     //Level Bids
     await mainPage.clickButtonLevellingBid();
     await mainPage
@@ -136,15 +145,15 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
         .nth(4)
     ).toHaveText(userData.existingUser.organization);
     await mainPage.columnFooterOfBidLevelling.nth(4).scrollIntoViewIfNeeded();
-    // await expect(mainPage.columnFooterOfBidLevelling.nth(4)).toHaveText(
-    //   "$" + formatNumberWithComma(sumOfTotalCostString2)
-    // );
+    await expect(mainPage.columnFooterOfBidLevelling.nth(4)).toHaveText(
+      "$" + formatNumberWithComma(sumOfTotalCostString2)
+    );
     await expect(
       mainPage.columnHeadersOfBidLevelling(organizationName).nth(5)
     ).toHaveText(organizationName);
-    // await expect(mainPage.columnFooterOfBidLevelling.nth(5)).toHaveText(
-    //   "$" + formatNumberWithComma(sumOfTotalCostString1)
-    // );
+    await expect(mainPage.columnFooterOfBidLevelling.nth(5)).toHaveText(
+      "$" + formatNumberWithComma(sumOfTotalCostString1)
+    );
     //Award
     await mainPage.award();
     await expect(mainPage.cellStatusAwarded).toBeVisible();
@@ -215,10 +224,14 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     const projectRowIndex = await capExPage
       .rowWithProjectName(projectName)
       .getAttribute("row-index");
+    await expect(
+      capExPage.cellRevisedBudgetProject(projectRowIndex!).first()
+    ).toBeVisible();
     await capExPage
       .cellRevisedBudgetProject(projectRowIndex!)
       .first()
       .scrollIntoViewIfNeeded();
+    
     await expect(
       capExPage.cellRevisedBudgetProject(projectRowIndex!).first()
     ).toContainText("$" + formatNumberWithComma(totalPrice));

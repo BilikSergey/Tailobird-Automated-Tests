@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "run:ui": "npx playwright test --ui",
-    "run:headless": "npx playwright test",
+    "run:headless": "npx playwright test --workers=1 --project=chromium --project=firefox --project=webkit",
     "create:report": "npx playwright show-report"
   },
   "keywords": [],

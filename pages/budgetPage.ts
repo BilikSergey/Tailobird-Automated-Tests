@@ -140,10 +140,10 @@ export class BudgetPage {
     await this.hoveringButtonAddBudget.hover();
     await this.clickableButtonAddBudget.click();
     await expect(this.cellsCategory).toHaveCount(quantityOfRows + 1);
-    await this.cellsCategory.last().dblclick();
+    await this.cellsCategory.first().dblclick();
     await this.inputCategory.fill(certainOption);
     await this.categoryOption(certainOption).click();
-    await expect(this.cellsCategory.last()).toContainText(certainOption);
+    await expect(this.cellsCategory.first()).toContainText(certainOption);
     const box = await this.cellRevisedBudget.last().boundingBox();
     if (box) {
       await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

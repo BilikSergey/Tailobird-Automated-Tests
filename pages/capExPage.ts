@@ -29,44 +29,42 @@ const rowScope = (bidName: string) =>
 export class CapExPage {
   constructor(private page: Page) {}
 
-  // === Getters for static locators ===
+  // Getters
   get buttonCapExAtSidebar() {
     return this.page.locator(buttonCapExAtSidebar);
   }
-
   get inputCapExSearch() {
     return this.page.locator(inputCapExSearch);
   }
-
   get inputSearchCapExData() {
     return this.page.locator(inputSearchCapExData);
   }
+  get countOfRows() {
+    return this.page
+      .locator('//div[@role="presentation"]')
+      .first()
+      .locator('[role="row"]');
+  }
 
-  // === Dynamic locators ===
+  // Dynamic locators
   capExRows(label: string) {
     return this.page.locator(capExRows(label));
   }
-
   rowWithProjectName(label: string) {
     return this.page.locator(rowWithProjectName(label));
   }
-
   cellJobCategory(label: string) {
     return this.page.locator(cellJobCategory(label));
   }
-
   cellRevisedBudgetProject(label: string) {
     return this.page.locator(cellRevisedBudgetProject(label));
   }
-
   cellBudgetRemainingProject(label: string) {
     return this.page.locator(cellBudgetRemainingProject(label));
   }
-
   cellOriginalContractProject(label: string) {
     return this.page.locator(cellOriginalContractProject(label));
   }
-
   cellCurrentContractProject(label: string) {
     return this.page.locator(cellCurrentContractProject(label));
   }
@@ -74,7 +72,6 @@ export class CapExPage {
   cellRemainingContractProject(label: string) {
     return this.page.locator(cellRemainingContractProject(label));
   }
-
   rowScope(bidName: string) {
     return this.page.locator(rowScope(bidName));
   }
@@ -83,8 +80,15 @@ export class CapExPage {
   async capEx(projectName: string) {
     await this.buttonCapExAtSidebar.click();
     await expect(this.inputCapExSearch).toBeVisible();
+    let prevCount = await this.countOfRows.count();
     await this.inputSearchCapExData.fill(projectName);
-    await this.cellJobCategory(projectName).dblclick();
+    await expect
+      .poll(async () => {
+        const currentCount = await this.countOfRows.count();
+        return currentCount;
+      })
+      .not.toBe(prevCount);
+    await this.cellJobCategory(projectName).dblclick({ force: true });
   }
 
   async fillSearchInput(label: string) {

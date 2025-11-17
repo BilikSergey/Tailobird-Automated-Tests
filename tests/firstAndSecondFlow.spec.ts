@@ -11,7 +11,6 @@ import { formatNumberWithComma } from "../utils/formatters";
 import { formatDateRange } from "../utils/formatters";
 import { scrollByArrows } from "../utils/formatters";
 import { expectToBeScrollable } from "../utils/formatters";
-import { chromium } from "playwright";
 
 test.describe.serial("Tailobird-Automated-Tests", () => {
   let login: LoginUser;
@@ -36,9 +35,8 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
     firstNumberBidPrice + secondNumberBidPrice + thirdNumberBidPrice;
   const totalPrice = totalNumberPrice.toString();
 
-  test("First Flow", async () => {
+  test("First Flow", async ({ browser }) => {
     //log in
-    const browser = await chromium.launch({ headless: true });
     const context1 = await browser.newContext();
     const page1 = await context1.newPage();
     login = new LoginUser(page1);
@@ -191,7 +189,7 @@ test.describe.serial("Tailobird-Automated-Tests", () => {
       originalBudget
     );
     //budget verification
-    await expect((await budgetPage.cellRevisedBudget).last()).toHaveText(
+    await expect((budgetPage.cellRevisedBudget).last()).toHaveText(
       "$" + formatNumberWithComma(originalBudget)
     );
     await expect(budgetPage.cellOriginalBudget.last()).toHaveText(
